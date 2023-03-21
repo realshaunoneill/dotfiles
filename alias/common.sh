@@ -50,6 +50,7 @@ function getsshkey () {
   if [ ! -f $HOME/.ssh ]; then
       mkdir $HOME/.ssh
   fi
+  
   if [ ! -f $HOME/.ssh/authorized_keys ]; then
       touch $HOME/.ssh/authorized_keys
   fi
