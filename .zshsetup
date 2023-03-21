@@ -1,0 +1,20 @@
+echo "
+Linux/Putty [1]
+Windows/WSL [2]
+Custom [3]
+"
+
+function zshmode {
+    cp $ZDOTDIR/themes/.p10k.$1 $ZDOTDIR/.p10k.zsh
+}
+
+while true; do
+    printf "What kind of shell do you want? [1,2,3] "
+    read mode
+    case $mode in
+        1 ) zshmode "linux"; break;;
+        2 ) zshmode "windows"; break;;
+        3 ) exec p10k configure; break;;
+        * ) echo "Please enter a valid mode";;
+    esac
+done
