@@ -167,7 +167,12 @@ if [ ! -d $HOME/.config ]; then
     cp -r $ZDOTDIR/.config $HOME/.config
 fi
 
+# Check if home directory .vim folder exists otherwise copy it from the dotfiles
+if [ ! -d $HOME/.config ]; then
+    cp -r $ZDOTDIR/homeConfigs/.vim $HOME/.vim
+fi
+
 # Check if home directory tmux config exists otherwise copy it from the config folder
 if [ ! -d $HOME/.tmux.conf ]; then
-    cp $ZDOTDIR/.config/tmux/.tmux.conf $HOME/.tmux.conf
+    cp $ZDOTDIR/homeConfigs/tmux/.tmux.conf $HOME/.tmux.conf
 fi
