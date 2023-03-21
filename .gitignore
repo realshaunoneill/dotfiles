@@ -1,1 +1,6 @@
-#Ignores everything
+.oh-my-zsh/
+.p10k.zsh
+.zcompdump*
+.zsh_history
+.zshupdate
+custom/

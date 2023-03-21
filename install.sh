@@ -22,6 +22,15 @@ if ! [ -x "$(command -v git)" ]; then
     exit 1
 fi
 
+printf "Would you like to install the zsh config? This will wipe your current .zsh directory (y/n) "
+read -r installZshConfig
+if [ $installZshConfig = "y" ]; then
+    echo "Installing zsh config..."
+else
+    echo "Exiting install..."
+    exit 1
+fi
+
 if [ $machine = "Linux" ]; then 
     echo "Running installation for Linux...."
     
