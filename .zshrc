@@ -118,7 +118,7 @@ ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 alias zshconfig="$EDITOR $ZDOTDIR/.zshrc"
 alias ohmyzsh="$EDITOR $ZSH"
 alias zreconf="source $ZDOTDIR/.zshsetup"
-alias zreset="cd ~ && sh -c '$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh)'"
+alias zreset="sh -c '$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh)'"
 
 #Adds auto upgrade system
 source $ZDOTDIR/.zshupgrade
