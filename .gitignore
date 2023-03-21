@@ -1,0 +1,12 @@
+#Ignores everything
+*
+
+#ZSH Files
+!.zshrc
+!.zshenv
+!.zlogin
+!.zlogout
+!.zprofile
+!README.md
+!.gitignore
+!zshupdate
