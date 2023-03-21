@@ -75,7 +75,7 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting wd)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting wd sudo)
 
 # extra_plugins=$ZDOTDIR/.zshplugins
 # if [ -f $extra_plugins ];  then
@@ -87,7 +87,8 @@ source $ZSH/oh-my-zsh.sh
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
-export LANG=en_US.UTF-8
+export LANG=en_GB.UTF-8
+export LC_ALL=en_GB.UTF-8
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
@@ -116,7 +117,6 @@ ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 alias zshconfig="$EDITOR $ZDOTDIR/.zshrc"
 alias ohmyzsh="$EDITOR $ZSH"
 alias zreconf="source $ZDOTDIR/.zshsetup"
-alias zreset="sh -c '$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh)'"
 
 #Adds auto upgrade system
 source $ZDOTDIR/.zshupgrade

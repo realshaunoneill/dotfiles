@@ -65,3 +65,8 @@ function downloadVimConfig () {
     git clone https://github.com/tpope/vim-fugitive $HOME/.vim/bundle/vim-fugitive
     git clone https://github.com/matze/vim-move $HOME/.vim/bundle/vim-move
 }
+
+function resetZsh () {
+  echo "Resetting zsh config..."
+  sh -c '$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh)'
+}
