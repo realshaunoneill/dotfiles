@@ -1,9 +1,6 @@
-# Zsh-Configs
+# dotfiles
 
 Used so I can easily import my zsh config into difference machines.
 
 ## Installation 
-- `sh -c "$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/Zsh-Configs/master/install.sh)"`
-
-### Vim Config:
-- `sh -c "$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/Vim-Configs/master/install.sh)"`
+- `sh -c "$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh)"`
