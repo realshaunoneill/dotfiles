@@ -32,7 +32,7 @@ else
 fi
 
 # If a zs_history file exists, copy it to the home directory as a backup
-if [ -f $HOME/.zsh_history ]; then
+if [ -f $HOME/.zsh/.zsh_history ]; then
     echo "Copying zsh history..."
     cp $HOME/.zsh/.zsh_history $HOME/.zsh_history.bak
 fi
