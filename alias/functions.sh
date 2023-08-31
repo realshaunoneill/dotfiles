@@ -72,10 +72,10 @@ function resetZsh () {
 }
 
 function fixSudo () {
-  if grep -q "auth sufficient pam_tid.so" "/etc/pam.d/sudo"; then
+  if sudo grep -q "auth sufficient pam_tid.so" "/etc/pam.d/sudo"; then
     echo "sudo is already configured to work with touch id"
   else
     echo "Configuring sudo to work with touch id..."
-    echo "auth sufficient pam_tid.so" >> /etc/pam.d/sudo
+    sudo echo "auth sufficient pam_tid.so" >> /etc/pam.d/sudo
   fi
 }
