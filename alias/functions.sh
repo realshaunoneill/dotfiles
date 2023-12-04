@@ -90,8 +90,9 @@ function fixLocals () {
 }
 
 function shuv() {
-  git commit -m "${1:-x}"
-  git push
+  eval "git add ."
+  eval "git commit -m "${1:-x}""
+  eval "git push"
 }
 
 function gcommit () {​
@@ -103,8 +104,8 @@ function gcommit () {​
     exit 1
   fi
   
-  echo "running:  git commit -m \"$BRANCH: $*\""
-  eval "git commit -m \"$BRANCH: $*\""
+  echo "running: git add . && git commit -m \"$BRANCH: $*\""
+  eval "git add . && git commit -m \"$BRANCH: $*\""
 }
 
 function gpush () {
