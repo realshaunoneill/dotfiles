@@ -105,12 +105,24 @@ function gcommit () {​
   fi
   
   echo "running: git add . && git commit -m \"$BRANCH: $*\""
-  eval "git add . && git commit -m \"$BRANCH: $*\""
+  git add . && git commit -m \"$BRANCH: $*\"
 }
 
 function gpush () {
-  BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")		# Branch name trimmed of any trailing newline
+  STATUS=$(git status -sb 2>/dev/null)				# Used later to check if contains origin (has upstream)
+  ERROR=$(git status -sb 2>&1 > /dev/null)			# If this is not empty usually means not in a git repo
+  SUB='origin'
 
-  echo "running:  git push origin $BRANCH"
-  eval "git push origin $BRANCH"
+  if [ ! -z "$ERROR" ]; then
+    echo "Eh this ain't no git repo man.."
+    exit 1
+  fi
+
+  if grep -q "$SUB" <<< "$STATUS"; then
+    echo "pushing to established upstream repo"
+    git push
+    exit 0
+  fi
+  echo "setting upstream and pushing to repo"
+  git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")		# No upstream. Subcommand gets current branch and trims newline
 }
