@@ -66,6 +66,22 @@ function downloadVimConfig () {
     git clone https://github.com/matze/vim-move $HOME/.vim/bundle/vim-move
 }
 
+function setupExa () {
+  # Check if the exa command exists
+  if ! command -v exa &> /dev/null; then
+    echo "Installing exa..."
+
+    if [ $machine = "Linux" ]; then 
+      echo "Installing exa... (Linux)"
+      sudo apt-get install -y exa
+
+    elif [ $machine = "Mac" ]; then 
+      echo "Installing exa... (Mac)"
+      brew install exa
+    fi
+  fi
+}
+
 function resetZsh () {
   echo "Resetting zsh config..."
   curl -s https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh | bash
@@ -105,7 +121,8 @@ function gcommit () {​
   fi
   
   echo "running: git add . && git commit -m \"$BRANCH: $*\""
-  eval "git add . && git commit -m \"$BRANCH: $*\""
+  eval "git add ."
+  eval "git commit -m \"$BRANCH: $*\""
 }
 
 function gpush () {

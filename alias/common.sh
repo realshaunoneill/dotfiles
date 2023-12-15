@@ -40,3 +40,8 @@ alias node-arch="node -e 'console.log(process.arch)'"
 alias python-arch="python -c 'import platform; print(platform.platform())'"
 
 alias node-reset="unset NODE_OPTIONS"
+
+  # Check if the exa command exists
+  if ! command -v exa &> /dev/null; then
+    alias ls="exa -la --icons --no-user --group-directories-first  --time-style long-iso"
+  fi
