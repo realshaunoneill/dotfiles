@@ -68,7 +68,7 @@ function downloadVimConfig () {
 
 function setupExa () {
   # Check if the exa command exists
-  if ! command -v exa &> /dev/null; then
+  if ! command -v exa > /dev/null; then
     echo "Installing exa..."
 
     if [ $machine = "Linux" ]; then 
