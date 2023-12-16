@@ -42,11 +42,13 @@ alias python-arch="python -c 'import platform; print(platform.platform())'"
 alias node-reset="unset NODE_OPTIONS"
 
 # Check if the exa command exists
-if command -v exa > /dev/null && [ -z "$DISABLE_EXA" ]; then
+if command -v exa > /dev/null; then
     # Sets the timestamp colour to a bit lighter blue
     export EXA_COLORS="da=1;34"
 
     alias ls="exa -la --header --long --icons --no-user --group-directories-first --time-style long-iso"
     alias lst="exa -la --header --long --icons --no-user --group-directories-first --time-style long-iso --tree --level=2"
     alias lsg="exa -la --header --grid  --icons --no-user --group-directories-first --time-style long-iso"
+else
+    echo "exa not installed or disabled"
 fi
