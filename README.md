@@ -43,6 +43,10 @@ You can disable this by setting the following environment variable.
 export DISABLE_EXA=true
 ```
 This can be added into your `~/.profile` file if you want to make this change permanent when you open a new shell.
+You can do this by running the following command.
+```sh
+echo "export DISABLE_EXA=true" >> $HOME/.profile
+```
 
 
 # Contributions
