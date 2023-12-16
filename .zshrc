@@ -176,7 +176,7 @@ if [ ! -d $HOME/.vim ]; then
 fi
 
 # Check if the exa command exists and that the .zprofile doesn't exist as its the first time running
-if command -v exa > /dev/null && [ ! -f $HOME/.zprofile ]; then
+if [[ -f /opt/homebrew/bin/exa ]] && [ ! -f $HOME/.zprofile ]; then
     printf "Would you like to setup exa? (y/n) "
     read -r setupExa
     if [ $setupExa = "y" ]; then
