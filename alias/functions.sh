@@ -119,7 +119,7 @@ function shuv() {
   git push
 }
 
-function gcommit () {​
+function gcommit () {
   BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\" | cut -f1,2 -d'-')		# Branch name trimmed of any trailing newline
   
   if [ -z "$1" ]; then
