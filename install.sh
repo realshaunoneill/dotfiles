@@ -13,13 +13,13 @@ esac
 # check if the zsh command is valid
 if ! [ -x "$(command -v zsh)" ]; then
     echo 'Error: zsh is not installed.'
-    exit 1
+    return 1
 fi
 
 # check if the zsh command is valid
 if ! [ -x "$(command -v git)" ]; then
     echo 'Error: git is not installed.'
-    exit 1
+    return 1
 fi
 
 printf "Would you like to install the zsh config? This will wipe your current .zsh directory (y/n) "
@@ -28,7 +28,7 @@ if [ $installZshConfig = "y" ]; then
     echo "Installing zsh config..."
 else
     echo "Exiting install..."
-    exit 1
+    return 1
 fi
 
 # If a previous .zsh folder exists, copy it to the new .zsh.backup folder
