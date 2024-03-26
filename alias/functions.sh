@@ -183,7 +183,7 @@ function pushLogFile () {
   awk "{print \"$1 \" \$0}" < "$3" | nc "$2.data.logs.insight.rapid7.com" 10000;
 }
 
-function gcount() {
+function gcountlines() {
     local author="${1:-$(git config user.name)}"
     echo "Lines edited by $author"
     git log --author="$author" --pretty=format: --numstat | awk '
