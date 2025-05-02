@@ -182,3 +182,16 @@ function pushLogFile () {
   fi
   awk "{print \"$1 \" \$0}" < "$3" | nc "$2.data.logs.insight.rapid7.com" 10000;
 }
+
+gcount() {
+    local author="${1:-$(git config user.name)}"
+    echo "Lines edited by $author"
+    git log --author="$author" --pretty=format: --numstat | awk '
+        {a+=$1;r+=$2} 
+        END {
+            printf "\n\033[0;32mAdded ++ %d\n\033[0;31mRemoved -- %d\n\033[0m", a, r
+        }
+    '
+}
+
+
