@@ -30,3 +30,9 @@ alias uncommit='git reset --soft HEAD~1'
 alias ga='git add'
 alias gc='git commit -m'
 alias gcm='git checkout master'
+
+# Others
+alias node-arch="node -e 'console.log(process.arch)'"
+alias python-arch="python -c 'import platform; print(platform.platform())'"
+
+alias node-reset="unset NODE_OPTIONS"
