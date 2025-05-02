@@ -84,8 +84,6 @@ plugins=(git zsh-autosuggestions zsh-syntax-highlighting wd)
 
 source $ZSH/oh-my-zsh.sh
 
-# User configuration
-
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
@@ -142,7 +140,8 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-# Alias's depending on OS and common
+# Source common aliases and functions, along with OS specific ones
+source $ZDOTDIR/alias/functions.sh
 source $ZDOTDIR/alias/common.sh
 
 if [ $machine = "Linux" ]; then 
@@ -151,12 +150,6 @@ if [ $machine = "Linux" ]; then
 elif [ $machine = "Mac" ]; then 
     source $ZDOTDIR/alias/mac.sh
 fi
-
-# Create .zprofile if it doesn't exist and source it
-if [ ! -f $HOME/.zprofile ]; then
-    touch ~/.zprofile
-fi
-source $HOME/.zprofile
 
 # Load application specific configs
 [[ -f $ZDOTDIR/appConfigs/nvm.zsh ]] && source $ZDOTDIR/appConfigs/nvm.zsh
@@ -174,9 +167,15 @@ fi
 
 # Prompt the person if they want to install the dotfiles
 if [ ! -d $HOME/.vim ]; then
-    echo "Would you like to install the vim configuration? (y/n)"
+    printf "Would you like to install the vim configuration? (y/n) "
     read -r installVimConfig
     if [ $installVimConfig = "y" ]; then
         downloadVimConfig
     fi
 fi
+
+# Create .zprofile if it doesn't exist and source it
+if [ ! -f $HOME/.zprofile ]; then
+    touch ~/.zprofile
+fi
+source $HOME/.zprofile
