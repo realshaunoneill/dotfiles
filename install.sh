@@ -31,30 +31,27 @@ else
     exit 1
 fi
 
-function backupZshHistory {
-    if [ -f $HOME/.zsh_history ]; then
-        echo "Copying zsh history..."
-        cp $HOME/.zsh/.zsh_history $HOME/.zsh_history.bak
-    fi
-}
-
-function restoreZshHistory {
-    if [ -f $HOME/.zsh_history.bak ]; then
-        echo "Restoring zsh history..."
-        mv $HOME/.zsh_history.bak $HOME/.zsh/.zsh_history
-    fi
-}
+# If a zs_history file exists, copy it to the home directory as a backup
+if [ -f $HOME/.zsh_history ]; then
+    echo "Copying zsh history..."
+    cp $HOME/.zsh/.zsh_history $HOME/.zsh_history.bak
+fi
 
 if [ $machine = "Linux" ]; then 
     echo "Running installation for Linux...."
     
     touch $HOME/.zsh && touch $HOME/.zcompdump
-    backupZshHistory
     rm -rf $HOME/.zsh* && rm -rf $HOME/.zcompdump*
     git clone https://github.com/realshaunoneill/dotfiles.git $HOME/.zsh
     echo "export ZDOTDIR=\$HOME/.zsh" > $HOME/.zshenv
     echo "source \$ZDOTDIR/.zshenv" >> $HOME/.zshenv
-    restoreZshHistory
+
+    # If a previous zsh_history file exists, copy it to the new .zsh folder
+    if [ -f $HOME/.zsh_history.bak ]; then
+        echo "Restoring zsh history..."
+        mv $HOME/.zsh_history.bak $HOME/.zsh/.zsh_history
+    fi
+
     chsh -s $(which zsh)
     zsh
 
@@ -62,12 +59,17 @@ elif [ $machine = "Mac" ]; then
     echo "Running installation for Mac...."
     
     touch $HOME/.zsh && touch $HOME/.zcompdump
-    backupZshHistory
     rm -rf $HOME/.zsh* && rm -rf $HOME/.zcompdump*
     git clone https://github.com/realshaunoneill/dotfiles.git $HOME/.zsh
     echo "export ZDOTDIR=\$HOME/.zsh" > $HOME/.zshenv
     echo "source \$ZDOTDIR/.zshenv" >> $HOME/.zshenv
-    restoreZshHistory
+
+    # If a previous zsh_history file exists, copy it to the new .zsh folder
+    if [ -f $HOME/.zsh_history.bak ]; then
+        echo "Restoring zsh history..."
+        mv $HOME/.zsh_history.bak $HOME/.zsh/.zsh_history
+    fi
+
     chsh -s $(which zsh)
     zsh
 
