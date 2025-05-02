@@ -46,10 +46,20 @@ alias upload='$ZDOTDIR/bin/imgur.sh'
 
 # Pull my public ssh key from shaunoneill.com and save it to the .ssh folder
 function getsshkey () {
-  curl -s https://shaunoneill.com/sshkey >> ~/.ssh/authorized_keys
+  # Create the .ssh folder if it doesn't exist and the authorized_keys file
+  if [ ! -f $HOME/.ssh ]; then
+      mkdir $HOME/.ssh
+  fi
+  if [ ! -f $HOME/.ssh/authorized_keys ]; then
+      touch $HOME/.ssh/authorized_keys
+  fi
+
+  curl -s https://shaunoneill.com/publickey >> ~/.ssh/authorized_keys
 }
 
 # Updates the home directory config files from the dotfiles config
 function resetLocalConfig () {
+  echo "Resetting home directory config folder and tmux config"
+  cp $ZDOTDIR/homeConfigs/tmux/.tmux.conf $HOME/.tmux.conf
   cp -r $ZDOTDIR/.config $HOME/.config
 }

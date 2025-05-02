@@ -10,16 +10,20 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
+# check if the zsh command is valid
+if ! [ -x "$(command -v zsh)" ]; then
+    echo 'Error: zsh is not installed.' >&2
+    exit 1
+fi
+
+# check if the zsh command is valid
+if ! [ -x "$(command -v git)" ]; then
+    echo 'Error: git is not installed.' >&2
+    exit 1
+fi
+
 if [ $machine = "Linux" ]; then 
     echo "Running installation for Linux...."
-
-    if ! [ -x "$(command -v apt-get)" ]; then
-        echo 'Error: apt is not installed.' >&2
-        exit 1
-    else
-        sudo apt-get update
-        sudo apt-get install -y git zsh
-    fi
     
     touch $HOME/.zsh && touch $HOME/.zcompdump
     rm -rf $HOME/.zsh* && rm -rf $HOME/.zcompdump*
@@ -31,14 +35,6 @@ if [ $machine = "Linux" ]; then
 
 elif [ $machine = "Mac" ]; then 
     echo "Running installation for Mac...."
-
-    if ! [ -x "$(command -v brew)" ]; then
-        echo 'Error: apt is not installed.' >&2
-        exit 1
-    else 
-        brew update
-        brew install zsh
-    fi
     
     touch $HOME/.zsh && touch $HOME/.zcompdump
     rm -rf $HOME/.zsh* && rm -rf $HOME/.zcompdump*
