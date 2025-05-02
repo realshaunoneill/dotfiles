@@ -113,8 +113,9 @@ export EDITOR='vim'
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE=("fg=6")
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 
-#Aliases
+# Core Aliases
 alias zshconfig="$EDITOR $ZDOTDIR/.zshrc"
+alias zupdate="git -C $ZDOTDIR pull && source $ZDOTDIR/.zshrc"
 alias ohmyzsh="$EDITOR $ZSH"
 alias zreconf="source $ZDOTDIR/.zshsetup"
 
