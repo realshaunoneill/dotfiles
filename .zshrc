@@ -167,13 +167,16 @@ if [ ! -d $HOME/.config ]; then
     cp -r $ZDOTDIR/.config $HOME/.config
 fi
 
-# Check if home directory .vim folder exists otherwise copy it from the dotfiles
-if [ ! -d $HOME/.vim ]; then
-    cp -r $ZDOTDIR/homeConfigs/.vim $HOME/.vim
-    cd $HOME/.vim && git submodule update --init --recursive
-fi
-
 # Check if home directory tmux config exists otherwise copy it from the config folder
 if [ ! -d $HOME/.tmux.conf ]; then
     cp $ZDOTDIR/homeConfigs/tmux/.tmux.conf $HOME/.tmux.conf
+fi
+
+# Prompt the person if they want to install the dotfiles
+if [ ! -d $HOME/.vim ]; then
+    echo "Would you like to install the vim configuration? (y/n)"
+    read -r installVimConfig
+    if [ $installVimConfig = "y" ]; then
+        downloadVimConfig
+    fi
 fi
