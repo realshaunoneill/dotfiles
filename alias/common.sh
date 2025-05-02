@@ -1,4 +1,5 @@
-# Had to be done
+
+alias sudo='sudo '
 alias reload='echo "Reloading ZSH file now..." && source $ZDOTDIR/.zshrc'
 
 # General

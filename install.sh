@@ -53,5 +53,6 @@ elif [ $machine = "Mac" ]; then
     chsh -s $(which zsh)
     zsh
 
-else echo "Exiting install... Unsupported OS: ${machine}"
+else 
+    echo "Exiting install... Unsupported OS: ${machine}"
 fi
