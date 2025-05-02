@@ -126,3 +126,16 @@ function gpush () {
   echo "setting upstream and pushing to repo"
   git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")		# No upstream. Subcommand gets current branch and trims newline
 }
+
+function gpushcan () {
+  ERROR=$(git status -sb 2>&1 > /dev/null)			# If this is not empty usually means not in a git repo
+
+  if [ ! -z "$ERROR" ]; then
+    echo "Eh this ain't no git repo man.."
+    exit 1
+  fi
+
+  echo "Pushing to canary branch"
+  echo "git push origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\"):canary --force"
+  git push origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\"):canary --force
+}
