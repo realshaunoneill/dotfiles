@@ -95,14 +95,14 @@ function shuv() {
 }
 
 function gcommit () {​
-  BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")		# Branch name trimmed of any trailing newline
+  BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\" | cut -f1,2 -d'-')		# Branch name trimmed of any trailing newline
   
   if [ -z "$1" ]; then
     echo "You need to pass me a message" 
     echo "usage: gcommit message"
     exit 1
   fi
-
+  
   echo "running:  git commit -m \"$BRANCH: $*\""
   eval "git commit -m \"$BRANCH: $*\""
 }
