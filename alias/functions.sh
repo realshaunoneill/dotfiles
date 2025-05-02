@@ -51,7 +51,7 @@ function zSetupExa () {
   fi
 }
 
-function zResetZsh () {
+function zReinstall () {
   echo "Resetting zsh config..."
   curl -s https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh | bash
 }
