@@ -68,5 +68,5 @@ function downloadVimConfig () {
 
 function resetZsh () {
   echo "Resetting zsh config..."
-  sh -c '$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh)'
+  curl -s https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh | bash
 }

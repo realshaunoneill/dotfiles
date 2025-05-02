@@ -12,13 +12,13 @@ esac
 
 # check if the zsh command is valid
 if ! [ -x "$(command -v zsh)" ]; then
-    echo 'Error: zsh is not installed.' >&2
+    echo 'Error: zsh is not installed.'
     exit 1
 fi
 
 # check if the zsh command is valid
 if ! [ -x "$(command -v git)" ]; then
-    echo 'Error: git is not installed.' >&2
+    echo 'Error: git is not installed.'
     exit 1
 fi
 
