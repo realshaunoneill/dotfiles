@@ -25,6 +25,7 @@ alias ngrok-tcp='$ZDOTDIR/bin/ngrok tcp'
 alias upload='$ZDOTDIR/bin/imgur.sh'
 
 # Git
+alias gupdate='git pull && git checkout master && git pull && git checkout - && git merge master'
 alias uncommit='git reset --soft HEAD~1'
 alias ga='git add'
 alias gc='git commit -m'
