@@ -171,16 +171,16 @@ if [ ! -d $HOME/.vim ]; then
     printf "Would you like to install the vim configuration? (y/n) "
     read -r installVimConfig
     if [ $installVimConfig = "y" ]; then
-        downloadVimConfig
+        zDownloadVimConfig
     fi
 fi
 
 # Check if the exa command exists and that the .zprofile doesn't exist as its the first time running
 if [[ -f /opt/homebrew/bin/exa ]] && [ ! -f $HOME/.zprofile ]; then
     printf "Would you like to setup exa? (y/n) "
-    read -r setupExa
-    if [ $setupExa = "y" ]; then
-        setupExa
+    read -r zSetupExa
+    if [ $zSetupExa = "y" ]; then
+        zSetupExa
     fi
 fi
 
