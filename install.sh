@@ -43,11 +43,6 @@ if [ -f $HOME/.zsh/.zsh_history ]; then
     cp $HOME/.zsh/.zsh_history $HOME/.zsh_history.bak
 fi
 
-if ! [$machine = "Linux" || $machine = "Mac"]; then
-    echo "Exiting install... Unsupported OS: ${machine}"
-    exit 1
-fi
-
 if [ $machine = "Linux" ]; then
     echo "Running installation for Linux...."
 elif [ $machine = "Mac" ]; then
