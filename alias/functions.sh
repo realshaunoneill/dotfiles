@@ -90,9 +90,9 @@ function fixLocals () {
 }
 
 function shuv() {
-  eval "git add ."
-  eval "git commit -m "${1:-x}""
-  eval "git push"
+  git add .
+  git commit -m "${1:-x}"
+  git push
 }
 
 function gcommit () {​
