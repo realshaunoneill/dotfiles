@@ -120,7 +120,22 @@ function fixLocals () {
 function shuv() {
   git add .
   git commit -m "${1:-x}"
-  git push
+  if [ "$2" = "--force" ]; then
+    git push --force
+  else
+    git push
+  fi
+}
+
+function gshuv () {
+  git add .
+  gcommit "${1:-x}"
+  
+  if [ "$2" = "--force" ]; then
+    git push --force
+  else
+    gpush
+  fi
 }
 
 function gcommit () {
@@ -156,6 +171,37 @@ function gpush () {
   git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")		# No upstream. Subcommand gets current branch and trims newline
 }
 
+function gremake () {
+  # Get current branch if no branch name was provided
+  local current_branch=$(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")
+  local branch_to_remake="${1:-$current_branch}"
+  
+  # Check if we're already on master
+  if [ "$current_branch" = "master" ]; then
+    echo "Error: Currently on master branch. Please specify a branch to remake."
+    echo "Usage: gremake [branch_name]"
+    return 1
+  fi
+  
+  # Change to master branch
+  echo "Switching to master branch..."
+  git checkout master
+  
+  # Delete the previous branch
+  echo "Deleting branch: $branch_to_remake"
+  git branch -D "$branch_to_remake"
+  
+  # Pull latest changes from master
+  echo "Pulling latest changes from master..."
+  git pull
+  
+  # Recreate the branch from the updated master
+  echo "Creating new branch: $branch_to_remake"
+  git checkout -b "$branch_to_remake"
+  
+  echo "Branch $branch_to_remake has been remade successfully"
+}
+
 function gpushcan () {
   ERROR=$(git status -sb 2>&1 > /dev/null)			# If this is not empty usually means not in a git repo
 
@@ -167,12 +213,6 @@ function gpushcan () {
   echo "Pushing to canary branch"
   echo "git push origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\"):canary --force"
   git push origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\"):canary --force
-}
-
-function gshuv () {
-  git add .
-  gcommit "${1:-x}"
-  gpush
 }
 
 function pushLogFile () {
