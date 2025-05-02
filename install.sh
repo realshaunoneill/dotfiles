@@ -31,14 +31,14 @@ else
     exit 1
 fi
 
-function backupZshHistory() {
+function backupZshHistory {
     if [ -f $HOME/.zsh_history ]; then
         echo "Copying zsh history..."
         cp $HOME/.zsh/.zsh_history $HOME/.zsh_history.bak
     fi
 }
 
-function restoreZshHistory() {
+function restoreZshHistory {
     if [ -f $HOME/.zsh_history.bak ]; then
         echo "Restoring zsh history..."
         mv $HOME/.zsh_history.bak $HOME/.zsh/.zsh_history
