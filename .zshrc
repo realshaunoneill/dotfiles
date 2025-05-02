@@ -41,7 +41,7 @@ ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="true"
 
 # Plugins - keep only essential ones for startup
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting wd)
 
 # Plugin configuration
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE=("fg=6")
