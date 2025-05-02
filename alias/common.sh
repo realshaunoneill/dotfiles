@@ -42,7 +42,7 @@ alias python-arch="python -c 'import platform; print(platform.platform())'"
 alias node-reset="unset NODE_OPTIONS"
 
 # Check if the exa command exists
-if command -v exa > /dev/null; then
+if [[ -f /opt/homebrew/bin/exa ]]; then
     # Sets the timestamp colour to a bit lighter blue
     export EXA_COLORS="da=1;34"
 
