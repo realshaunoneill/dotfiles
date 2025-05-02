@@ -11,18 +11,17 @@ fi
 # Support 256 color
 export TERM="xterm-256color"
 
-#Exports full range of colors
-blu="$(tput setaf 4)"
-norm="$(tput sgr0)"
-
 # Path to your oh-my-zsh installation.
 export ZSH=$ZDOTDIR/.oh-my-zsh
 
 # Would you like to use another custom folder than $ZSH/custom?
 ZSH_CUSTOM=$ZDOTDIR/custom
 
-#Checks if oh-my-zsh is installed
+# Check and install oh-my-zsh if needed (only runs once)
 if [ ! -d $ZSH ]; then
+    # Define colors here only when needed
+    blu="$(tput setaf 4)"
+    norm="$(tput sgr0)"
     printf "${blu}Installing oh-my-zsh...${norm}\n"
     git clone --depth=1 https://github.com/robbyrussell/oh-my-zsh.git $ZSH &> /dev/null
     git clone https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k &> /dev/null
@@ -31,87 +30,30 @@ if [ ! -d $ZSH ]; then
     printf "${blu}Done installing oh-my-zsh${norm}\n"
 fi
 
-# Set name of the theme to load. Optionally, if you set this to "random"
-# it'll load a random theme each time that oh-my-zsh is loaded.
-# See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
+# Set theme
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
-# Uncomment the following line to use case-sensitive completion.
+# Configuration options
 CASE_SENSITIVE="false"
-
-# Uncomment the following line to use hyphen-insensitive completion. Case
-# sensitive completion must be off. _ and - will be interchangeable.
 HYPHEN_INSENSITIVE="true"
-
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
-
-# Uncomment the following line to change how often to auto-update (in days).
 export UPDATE_ZSH_DAYS=10
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
 ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
 COMPLETION_WAITING_DOTS="true"
 
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+# Plugins - keep only essential ones for startup
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting wd sudo)
-
-# extra_plugins=$ZDOTDIR/.zshplugins
-# if [ -f $extra_plugins ];  then
-#     source $extra_plugins
-# fi
-
-source $ZSH/oh-my-zsh.sh
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-#
-export EDITOR='vim'
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# ssh
-# export SSH_KEY_PATH="~/.ssh/rsa_id"
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-#Plugin and theme setup
+# Plugin configuration
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE=("fg=6")
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+
+# Load oh-my-zsh
+source $ZSH/oh-my-zsh.sh
+
+# Environment settings
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export EDITOR='vim'
 
 # Core Aliases
 alias zshconfig="$EDITOR $ZDOTDIR/.zshrc"
@@ -120,19 +62,7 @@ alias zreload='echo "Reloading ZSH file now..." && source $ZDOTDIR/.zshrc'
 alias ohmyzsh="$EDITOR $ZSH"
 alias zreconf="source $ZDOTDIR/.zshsetup"
 
-#Adds auto upgrade system
-source $ZDOTDIR/.zshupgrade
-
-# Setup
-[[ ! -f ~/.zsh/.p10k.zsh ]] && source $ZDOTDIR/.zshsetup
-
-# To customize prompt, run `p10k configure` or edit ~/.zsh/.p10k.zsh.
-[[ -f ~/.zsh/.p10k.zsh ]] && source ~/.zsh/.p10k.zsh
-
-# set PATH so it includes user's private bin directories
-export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.zsh/bin
-
-# Allow us to check the OS at a later time
+# Determine OS (needed for conditional loading)
 unameOut="$(uname -s)"
 case "${unameOut}" in
     Linux*)     machine=Linux;;
@@ -142,50 +72,66 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
-# Source common aliases and functions, along with OS specific ones
-source $ZDOTDIR/alias/functions.sh
+# Load essential configs first
 source $ZDOTDIR/alias/common.sh
 
+# Lazy load OS-specific configs
 if [ $machine = "Linux" ]; then 
     source $ZDOTDIR/alias/linux.sh
-
 elif [ $machine = "Mac" ]; then 
     source $ZDOTDIR/alias/mac.sh
 fi
 
-# Load application specific configs
-[[ -f $ZDOTDIR/appConfigs/nvm.zsh ]] && source $ZDOTDIR/appConfigs/nvm.zsh
+# Lazy load NVM (only when needed)
+nvm() {
+  unset -f nvm
+  [ -s "$ZDOTDIR/appConfigs/nvm.zsh" ] && source "$ZDOTDIR/appConfigs/nvm.zsh"
+  nvm "$@"
+}
 
-# Check if home directory config folder exists otherwise copy it from the dotfiles
-if [ ! -d $HOME/.config ]; then
+# Add user's private bin directories to PATH
+export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.zsh/bin
+
+# Source upgrade system
+source $ZDOTDIR/.zshupgrade
+
+# Load p10k configuration
+[[ ! -f ~/.zsh/.p10k.zsh ]] && source $ZDOTDIR/.zshsetup
+[[ -f ~/.zsh/.p10k.zsh ]] && source ~/.zsh/.p10k.zsh
+
+# Load functions (moved after p10k for faster prompt)
+source $ZDOTDIR/alias/functions.sh
+
+# Source .zprofile if it exists
+[[ -f $HOME/.zprofile ]] && source $HOME/.zprofile
+
+# Deferred configuration checks - run after shell is loaded
+{
+  # Check if home directory config folder exists
+  if [ ! -d $HOME/.config ]; then
     cp -r $ZDOTDIR/.config $HOME/.config
-fi
+  fi
 
-# Check if home directory tmux config exists otherwise copy it from the config folder
-if [ ! -d $HOME/.tmux.conf ]; then
+  # Check if home directory tmux config exists
+  if [ ! -f $HOME/.tmux.conf ]; then
     cp $ZDOTDIR/homeConfigs/tmux/.tmux.conf $HOME/.tmux.conf
-fi
+  fi
 
-# Prompt the person if they want to install the dotfiles
-if [ ! -d $HOME/.vim ]; then
+  # Prompt for vim configuration if needed
+  if [ ! -d $HOME/.vim ]; then
     printf "Would you like to install the vim configuration? (y/n) "
     read -r installVimConfig
     if [ $installVimConfig = "y" ]; then
-        zDownloadVimConfig
+      zDownloadVimConfig
     fi
-fi
+  fi
 
-# Check if the exa command exists and that the .zprofile doesn't exist as its the first time running
-if [[ -f /opt/homebrew/bin/exa ]] && [ ! -f $HOME/.zprofile ]; then
+  # Setup exa if available
+  if [[ -f /opt/homebrew/bin/exa ]] && [ ! -f $HOME/.zprofile ]; then
     printf "Would you like to setup exa? (y/n) "
     read -r zSetupExa
     if [ $zSetupExa = "y" ]; then
-        zSetupExa
+      zSetupExa
     fi
-fi
-
-# Create .zprofile if it doesn't exist and source it
-if [ ! -f $HOME/.zprofile ]; then
-    touch ~/.zprofile
-fi
-source $HOME/.zprofile
+  fi
+} &!
