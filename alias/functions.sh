@@ -72,10 +72,19 @@ function resetZsh () {
 }
 
 function fixSudo () {
-  if sudo grep -q "auth sufficient pam_tid.so" "/etc/pam.d/sudo"; then
+  if grep -q "auth sufficient pam_tid.so" "/etc/pam.d/sudo"; then
     echo "sudo is already configured to work with touch id"
   else
     echo "Configuring sudo to work with touch id..."
     sudo echo "auth sufficient pam_tid.so" >> /etc/pam.d/sudo
   fi
+}
+
+function fixLocals () {
+  # Check if local-gen is not valid command
+  if ! command -v locale-gen &> /dev/null; then
+    sudo apt-get install -y locales
+  fi
+
+  sudo locale-gen $LANG
 }
