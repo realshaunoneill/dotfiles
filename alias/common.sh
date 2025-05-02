@@ -30,6 +30,11 @@ alias ga='git add'
 alias gc='git commit -m'
 alias gcm='git checkout master'
 
+# Docker
+alias docker-clean='docker system prune -a'
+alias docker-cleani='docker rmi $(docker images -a -q)'
+alias docker-cleanv='docker volume rm $(docker volume ls -q)'
+
 # Others
 alias node-arch="node -e 'console.log(process.arch)'"
 alias python-arch="python -c 'import platform; print(platform.platform())'"

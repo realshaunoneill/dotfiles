@@ -105,7 +105,7 @@ function gcommit () {​
   fi
   
   echo "running: git add . && git commit -m \"$BRANCH: $*\""
-  git add . && git commit -m \"$BRANCH: $*\"
+  eval "git add . && git commit -m \"$BRANCH: $*\""
 }
 
 function gpush () {
