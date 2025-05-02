@@ -35,5 +35,15 @@ There are a couple of plugins that are included by default. You can find a list 
 - [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
 - [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
 
+# Customization
+There are a few customizations that I have made to my shell.
+- Exa is used as the default ls command. You can find more information about exa [here](https://the.exa.website/).
+You can disable this by setting the following environment variable.
+```sh
+export DISABLE_EXA=true
+```
+This can be added into your `~/.profile` file if you want to make this change permanent when you open a new shell.
+
+
 # Contributions
 If you’d like to contribute to this project, reach out to me on social media or [Discord](https://discord.gg/bz2SN7d), or create a pull request for the necessary changes.
