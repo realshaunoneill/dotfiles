@@ -113,6 +113,10 @@ function fixLocals () {
   sudo locale-gen $LANG
 }
 
+# ------------------------------- #
+#           Work                  #
+# ------------------------------- #
+
 function shuv() {
   git add .
   git commit -m "${1:-x}"
@@ -125,7 +129,7 @@ function gcommit () {
   if [ -z "$1" ]; then
     echo "You need to pass me a message" 
     echo "usage: gcommit message"
-    exit 1
+    return 1
   fi
   
   echo "running: git add . && git commit -m \"$BRANCH: $*\""
@@ -140,13 +144,13 @@ function gpush () {
 
   if [ ! -z "$ERROR" ]; then
     echo "Eh this ain't no git repo man.."
-    exit 1
+    return 1
   fi
 
   if grep -q "$SUB" <<< "$STATUS"; then
     echo "pushing to established upstream repo"
     git push
-    exit 0
+    return 0
   fi
   echo "setting upstream and pushing to repo"
   git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")		# No upstream. Subcommand gets current branch and trims newline
@@ -157,7 +161,7 @@ function gpushcan () {
 
   if [ ! -z "$ERROR" ]; then
     echo "Eh this ain't no git repo man.."
-    exit 1
+    return 1
   fi
 
   echo "Pushing to canary branch"
@@ -169,4 +173,12 @@ function gshuv () {
   git add .
   gcommit "${1:-x}"
   gpush
+}
+
+function pushLogFile () {
+  if [ "$#" -ne 3 ];then
+      >&2 echo "Usage: $(basename "$0") <log_token> <region> <log_filename>"
+      return 1
+  fi
+  awk "{print \"$1 \" \$0}" < "$3" | nc "$2.data.logs.insight.rapid7.com" 10000;
 }

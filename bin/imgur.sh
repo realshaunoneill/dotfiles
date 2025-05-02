@@ -34,7 +34,7 @@ function upload {
 # Check arguments
 if [ "$1" == "-h" -o "$1" == "--help" ]; then
 	usage
-	exit 0
+	return 0
 elif [ $# -eq 0 ]; then
 	echo "No file specified; reading from stdin" >&2
 	exec "$0" -
@@ -43,7 +43,7 @@ fi
 # Check curl is available
 type curl &>/dev/null || {
 	echo "Couldn't find curl, which is required." >&2
-	exit 17
+	return 17
 }
 
 clip=""
@@ -112,5 +112,5 @@ else
 fi
 
 if $errors; then
-	exit 1
+	return 1
 fi
