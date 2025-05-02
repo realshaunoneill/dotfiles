@@ -1,5 +1,5 @@
 
-alias sudo='sudo '
+alias sudo=$'nocorrect sudo\t'
 alias reload='echo "Reloading ZSH file now..." && source $ZDOTDIR/.zshrc'
 
 # General
