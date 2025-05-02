@@ -41,6 +41,8 @@ fi
 if [ -f $HOME/.zsh/.zsh_history ]; then
     echo "Copying zsh history..."
     cp $HOME/.zsh/.zsh_history $HOME/.zsh_history.bak
+else
+    echo "No zsh history found... Continuing..."
 fi
 
 if [ $machine = "Linux" ]; then

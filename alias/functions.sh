@@ -88,3 +88,28 @@ function fixLocals () {
 
   sudo locale-gen $LANG
 }
+
+function shuv() {
+  git commit -m "${1:-x}"
+  git push
+}
+
+function gcommit () {​
+  BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")		# Branch name trimmed of any trailing newline
+  
+  if [ -z "$1" ]; then
+    echo "You need to pass me a message" 
+    echo "usage: gcommit message"
+    exit 1
+  fi
+
+  echo "running:  git commit -m \"$BRANCH: $*\""
+  eval "git commit -m \"$BRANCH: $*\""
+}
+
+function gpush () {
+  BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\")		# Branch name trimmed of any trailing newline
+
+  echo "running:  git push origin $BRANCH"
+  eval "git push origin $BRANCH"
+}
