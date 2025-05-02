@@ -70,3 +70,12 @@ function resetZsh () {
   echo "Resetting zsh config..."
   curl -s https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh | bash
 }
+
+function fixSudo () {
+  if grep -q "auth sufficient pam_tid.so" "/etc/pam.d/sudo"; then
+    echo "sudo is already configured to work with touch id"
+  else
+    echo "Configuring sudo to work with touch id..."
+    echo "auth sufficient pam_tid.so" >> /etc/pam.d/sudo
+  fi
+}
