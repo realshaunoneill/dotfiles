@@ -164,3 +164,9 @@ function gpushcan () {
   echo "git push origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\"):canary --force"
   git push origin $(git rev-parse --abbrev-ref HEAD | tr -d \"\\n\\r\"):canary --force
 }
+
+function gshuv () {
+  git add .
+  gcommit "${1:-x}"
+  gpush
+}
