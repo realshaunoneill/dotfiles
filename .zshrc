@@ -118,7 +118,7 @@ ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 alias zshconfig="$EDITOR $ZDOTDIR/.zshrc"
 alias ohmyzsh="$EDITOR $ZSH"
 alias zreconf="source $ZDOTDIR/.zshsetup"
-alias zreset="cd ~ && sh -c '$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh)'"
+alias zreset="cd ~ && sh -c "$(curl -fsSL https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh)""
 
 #Adds auto upgrade system
 source $ZDOTDIR/.zshupgrade
@@ -170,6 +170,7 @@ fi
 # Check if home directory .vim folder exists otherwise copy it from the dotfiles
 if [ ! -d $HOME/.config ]; then
     cp -r $ZDOTDIR/homeConfigs/.vim $HOME/.vim
+    cd $HOME/.vim && git submodule update --init --recursive
 fi
 
 # Check if home directory tmux config exists otherwise copy it from the config folder
