@@ -116,6 +116,7 @@ ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 # Core Aliases
 alias zshconfig="$EDITOR $ZDOTDIR/.zshrc"
 alias zupdate="git -C $ZDOTDIR pull && source $ZDOTDIR/.zshrc"
+alias zreload='echo "Reloading ZSH file now..." && source $ZDOTDIR/.zshrc'
 alias ohmyzsh="$EDITOR $ZSH"
 alias zreconf="source $ZDOTDIR/.zshsetup"
 
