@@ -29,6 +29,7 @@ alias uncommit='git reset --soft HEAD~1'
 alias ga='git add'
 alias gc='git commit -m'
 alias gcm='git checkout master'
+alias gcmp='git checkout master && git pull'
 
 # Docker
 alias docker-clean='docker system prune -a'
