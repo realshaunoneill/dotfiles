@@ -126,12 +126,12 @@ source $ZDOTDIR/alias/functions.sh
     fi
   fi
 
-  # Setup exa if available
-  if [[ -f /opt/homebrew/bin/exa ]] && [ ! -f $HOME/.zprofile ]; then
-    printf "Would you like to setup exa? (y/n) "
-    read -r zSetupExa
-    if [ $zSetupExa = "y" ]; then
-      zSetupExa
+  # Setup eza if available
+  if [[ -f /opt/homebrew/bin/eza ]] && [ ! -f $HOME/.zprofile ]; then
+    printf "Would you like to setup eza? (y/n) "
+    read -r zSetupEza
+    if [ $zSetupEza = "y" ]; then
+      zSetupEza
     fi
   fi
 } &!

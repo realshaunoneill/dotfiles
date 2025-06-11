@@ -43,14 +43,14 @@ alias python-arch="python -c 'import platform; print(platform.platform())'"
 
 alias node-reset="unset NODE_OPTIONS"
 
-# Check if the exa command exists
-if [[ -f /opt/homebrew/bin/exa ]]; then
+# Check if the eza command exists
+if [[ -f /opt/homebrew/bin/eza ]]; then
     # Sets the timestamp colour to a bit lighter blue
-    export EXA_COLORS="da=1;34"
+    export EZA_COLORS="da=1;34"
 
-    alias ls="exa -la --header --long --icons --no-user --group-directories-first --time-style long-iso"
-    alias lst="exa -la --header --long --icons --no-user --group-directories-first --time-style long-iso --tree --level=2"
-    alias lsg="exa -la --header --grid  --icons --no-user --group-directories-first --time-style long-iso"
+    alias ls="eza -la --header --long --icons --no-user --group-directories-first --time-style long-iso"
+    alias lst="eza -la --header --long --icons --no-user --group-directories-first --time-style long-iso --tree --level=2"
+    alias lsg="eza -la --header --grid  --icons --no-user --group-directories-first --time-style long-iso"
 fi
 
 # Kubernetes

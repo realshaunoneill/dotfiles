@@ -37,15 +37,15 @@ There are a couple of plugins that are included by default. You can find a list 
 
 # Customization
 There are a few customizations that I have made to my shell.
-- Exa is used as the default ls command. You can find more information about exa [here](https://the.exa.website/).
+- Eza is used as the default ls command. You can find more information about eza [here](https://eza.rocks/).
 You can disable this by setting the following environment variable.
 ```sh
-export DISABLE_EXA=true
+export DISABLE_EZA=true
 ```
 This can be added into your `~/.profile` file if you want to make this change permanent when you open a new shell.
 You can do this by running the following command.
 ```sh
-echo "export DISABLE_EXA=true" >> $HOME/.profile
+echo "export DISABLE_EZA=true" >> $HOME/.profile
 ```
 
 

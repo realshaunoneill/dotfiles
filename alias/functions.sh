@@ -35,18 +35,18 @@ function zDownloadVimConfig () {
     git clone https://github.com/matze/vim-move $HOME/.vim/bundle/vim-move
 }
 
-function zSetupExa () {
-  # Check if the exa command exists
-  if ! command -v exa > /dev/null; then
-    echo "Installing exa..."
+function zSetupEza () {
+  # Check if the eza command exists
+  if ! command -v eza > /dev/null; then
+    echo "Installing eza..."
 
     if [ $machine = "Linux" ]; then 
-      echo "Installing exa... (Linux)"
-      sudo apt-get install -y exa
+      echo "Installing eza... (Linux)"
+      sudo apt-get install -y eza
 
     elif [ $machine = "Mac" ]; then 
-      echo "Installing exa... (Mac)"
-      brew install exa
+      echo "Installing eza... (Mac)"
+      brew install eza
     fi
   fi
 }
