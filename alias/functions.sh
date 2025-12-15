@@ -234,4 +234,47 @@ function gcountlines() {
     '
 }
 
+# Clone repository using standard GitHub URL
+function clone() {
+  if [ -z "$1" ]; then
+    echo "Usage: clone <owner/repo> or clone <full-git-url>"
+    return 1
+  fi
+  
+  # If it's already a full git URL, use it as-is
+  if [[ "$1" == git@* ]] || [[ "$1" == https://* ]]; then
+    git clone "$1"
+  else
+    # Otherwise treat it as owner/repo format
+    git clone "git@github.com:$1.git"
+  fi
+}
+
+# Clone repository using personal GitHub SSH config
+function clonep() {
+  if [ -z "$1" ]; then
+    echo "Usage: clonep <owner/repo> or clonep <full-git-url>"
+    return 1
+  fi
+  
+  # If it's a full git URL with git@github.com, replace with git@github.com-personal
+  if [[ "$1" == git@github.com:* ]]; then
+    local personal_url="${1/git@github.com:/git@github.com-personal:}"
+    git clone "$personal_url"
+  # If it's already using -personal, use it as-is
+  elif [[ "$1" == git@github.com-personal:* ]]; then
+    git clone "$1"
+  # If it's an HTTPS URL, convert to SSH personal format
+  elif [[ "$1" == https://github.com/* ]]; then
+    local repo_path="${1#https://github.com/}"
+    repo_path="${repo_path%.git}"
+    git clone "git@github.com-personal:${repo_path}.git"
+  else
+    # Otherwise treat it as owner/repo format
+    git clone "git@github.com-personal:$1.git"
+  fi
+}
+
+
+
 
