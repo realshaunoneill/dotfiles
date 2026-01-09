@@ -275,6 +275,91 @@ function clonep() {
   fi
 }
 
+# ------------------------------- #
+#     Additional Utilities        #
+# ------------------------------- #
 
+# Create directory and cd into it
+function mkcd() {
+  mkdir -p "$1" && cd "$1"
+}
+
+# Find file by name in current directory
+function ff() {
+  find . -type f -iname "*$1*"
+}
+
+# Find directory by name
+function fd() {
+  find . -type d -iname "*$1*"
+}
+
+# Quick backup of a file
+function backup() {
+  cp "$1" "$1.bak.$(date +%Y%m%d_%H%M%S)"
+}
+
+# Get public IP address
+function myip() {
+  echo "Public IP: $(curl -s ifconfig.me)"
+  echo "Local IP: $(ipconfig getifaddr en0 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')"
+}
+
+# Quick HTTP server in current directory
+function serve() {
+  local port="${1:-8000}"
+  echo "Serving on http://localhost:$port"
+  python3 -m http.server "$port"
+}
+
+# Show directory size
+function dirsize() {
+  du -sh "${1:-.}" 2>/dev/null
+}
+
+# Kill process on a specific port
+function killport() {
+  if [ -z "$1" ]; then
+    echo "Usage: killport <port>"
+    return 1
+  fi
+  lsof -ti:"$1" | xargs kill -9 2>/dev/null && echo "Killed process on port $1" || echo "No process found on port $1"
+}
+
+# Quick note taking
+function note() {
+  local notes_file="$HOME/.notes"
+  if [ -z "$1" ]; then
+    cat "$notes_file" 2>/dev/null || echo "No notes yet"
+  else
+    echo "$(date '+%Y-%m-%d %H:%M'): $*" >> "$notes_file"
+    echo "Note added"
+  fi
+}
+
+# Weather in terminal
+function weather() {
+  curl -s "wttr.in/${1:-}"
+}
+
+# JSON pretty print
+function jsonpp() {
+  if [ -z "$1" ]; then
+    python3 -m json.tool
+  else
+    cat "$1" | python3 -m json.tool
+  fi
+}
+
+# Git - show branches sorted by last commit date
+function gbrecent() {
+  git for-each-ref --sort=-committerdate refs/heads/ --format='%(committerdate:short) %(refname:short)' | head -20
+}
+
+# Git - delete merged branches (except master/main)
+function gclean() {
+  git branch --merged | grep -vE '(master|main|\*)' | xargs -r git branch -d
+  echo "Cleaned up merged branches"
+}
 
 
