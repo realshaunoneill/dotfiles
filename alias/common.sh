@@ -1,6 +1,10 @@
 
 alias sudo=$'nocorrect sudo\t'
 
+# Disable autocorrect for common commands that get incorrectly corrected
+alias npx='nocorrect npx'
+alias nx='nocorrect nx'
+
 # General
 alias ping='ping -c 5'
 alias c='clear'
