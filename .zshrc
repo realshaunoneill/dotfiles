@@ -1,9 +1,11 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zsh/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block, everything else may go below.
-POWERLEVEL9K_INSTANT_PROMPT=verbose
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+if [[ "$TERM_PROGRAM" != "vscode" ]]; then
+  POWERLEVEL9K_INSTANT_PROMPT=verbose
+  if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+    source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+  fi
 fi
 # From this point on, until zsh is fully initialized, console input won't work and
 # console output may appear uncolored.
@@ -30,8 +32,12 @@ if [ ! -d $ZSH ]; then
     printf "${blu}Done installing oh-my-zsh${norm}\n"
 fi
 
-# Set theme
-ZSH_THEME="powerlevel10k/powerlevel10k"
+# Set theme - use a simple theme in IDE terminals to avoid rendering issues
+if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+  ZSH_THEME="robbyrussell"
+else
+  ZSH_THEME="powerlevel10k/powerlevel10k"
+fi
 
 # Configuration options
 CASE_SENSITIVE="false"
@@ -108,9 +114,11 @@ export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.zsh/bin
 # Source upgrade system
 source $ZDOTDIR/.zshupgrade
 
-# Load p10k configuration
-[[ ! -f ~/.zsh/.p10k.zsh ]] && source $ZDOTDIR/.zshsetup
-[[ -f ~/.zsh/.p10k.zsh ]] && source ~/.zsh/.p10k.zsh
+# Load p10k configuration (skip in IDE terminals)
+if [[ "$TERM_PROGRAM" != "vscode" ]]; then
+  [[ ! -f ~/.zsh/.p10k.zsh ]] && source $ZDOTDIR/.zshsetup
+  [[ -f ~/.zsh/.p10k.zsh ]] && source ~/.zsh/.p10k.zsh
+fi
 
 # Load functions (moved after p10k for faster prompt)
 source $ZDOTDIR/alias/functions.sh
