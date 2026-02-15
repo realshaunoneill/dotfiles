@@ -126,33 +126,36 @@ source $ZDOTDIR/alias/functions.sh
 # Source .zprofile if it exists
 [[ -f $HOME/.zprofile ]] && source $HOME/.zprofile
 
-# Deferred configuration checks - run after shell is loaded
-{
-  # Check if home directory config folder exists
-  if [ ! -d $HOME/.config ]; then
-    cp -r $ZDOTDIR/.config $HOME/.config
-  fi
-
-  # Check if home directory tmux config exists
-  if [ ! -f $HOME/.tmux.conf ]; then
-    cp $ZDOTDIR/homeConfigs/tmux/.tmux.conf $HOME/.tmux.conf
-  fi
-
+# Interactive configuration checks (only in real terminals, not scripts)
+if [[ -o interactive ]]; then
   # Prompt for vim configuration if needed
-  if [ ! -d $HOME/.vim ]; then
+  if [ ! -d "$HOME/.vim" ]; then
     printf "Would you like to install the vim configuration? (y/n) "
     read -r installVimConfig
-    if [ $installVimConfig = "y" ]; then
+    if [ "$installVimConfig" = "y" ]; then
       zDownloadVimConfig
     fi
   fi
 
   # Setup eza if available
-  if [[ -f /opt/homebrew/bin/eza ]] && [ ! -f $HOME/.zprofile ]; then
+  if command -v eza &>/dev/null && [ ! -f "$HOME/.zprofile" ]; then
     printf "Would you like to setup eza? (y/n) "
-    read -r zSetupEza
-    if [ $zSetupEza = "y" ]; then
+    read -r setupEza
+    if [ "$setupEza" = "y" ]; then
       zSetupEza
     fi
+  fi
+fi
+
+# Deferred non-interactive checks - run in background after shell is loaded
+{
+  # Check if home directory config folder exists
+  if [ ! -d "$HOME/.config" ]; then
+    cp -r "$ZDOTDIR/.config" "$HOME/.config"
+  fi
+
+  # Check if home directory tmux config exists
+  if [ ! -f "$HOME/.tmux.conf" ]; then
+    cp "$ZDOTDIR/homeConfigs/tmux/.tmux.conf" "$HOME/.tmux.conf"
   fi
 } &!

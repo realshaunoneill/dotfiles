@@ -14,8 +14,16 @@ alias hg='history | grep'
 # Safety aliases - ask before overwriting
 alias cp='cp -iv'
 alias mv='mv -iv'
-alias rm='rm -iv'
 alias mkdir='mkdir -pv'
+
+# Safe rm - skips confirmation when -f flag is used
+rm() {
+  if [[ "$*" == *-f* ]] || [[ "$*" == *-rf* ]]; then
+    command rm "$@"
+  else
+    command rm -iv "$@"
+  fi
+}
 
 # Resume wget
 alias wget='wget -c'
@@ -76,8 +84,8 @@ alias python-arch="python -c 'import platform; print(platform.platform())'"
 
 alias node-reset="unset NODE_OPTIONS"
 
-# Check if the eza command exists
-if [[ -f /opt/homebrew/bin/eza ]]; then
+# Check if eza is available
+if command -v eza &>/dev/null; then
     # Sets the timestamp colour to a bit lighter blue
     export EZA_COLORS="da=1;34"
 
