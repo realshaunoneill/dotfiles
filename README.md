@@ -31,22 +31,52 @@ zsh
 And thats it! You should now have a fully functional zsh shell. You can read below to learn more about the features and customizations that are included in this repository.
 
 # Plugins
-There are a couple of plugins that are included by default. You can find a list of all the plugins below.
+The following Oh My Zsh plugins are enabled by default:
+- `git` – aliases and prompt info for git
+- `wd` – warp directory, jump to bookmarked directories
 - [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
 - [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
 
 # Customization
 There are a few customizations that I have made to my shell.
-- Eza is used as the default ls command. You can find more information about eza [here](https://eza.rocks/).
-You can disable this by setting the following environment variable.
+- [Eza](https://eza.rocks/) is used as a richer `ls` when it's installed. On first launch you'll be prompted to install/set it up (via `zSetupEza`); it's optional, and the standard `ls` is used otherwise.
+
+# Functions
+A number of helper functions are defined in `alias/functions.sh`. Some of the handy ones:
+- `extract <archive>` – extract almost any archive type
+- `mkcd <dir>` – make a directory and cd into it
+- `ff <name>` / `fdir <name>` – find files / directories by name
+- `killport <port>` – kill whatever process is listening on a port
+- `serve [port]` – quick static HTTP server in the current directory
+- `myip` – show public and local IP
+- `weather [location]` – terminal weather via wttr.in
+- `jsonpp [file]` – pretty-print JSON
+- `gbrecent` – list branches by most recent commit
+- `gclean` – delete local branches already merged into master/main
+- `clone` / `clonep` – clone a repo via SSH (the `p` variant uses the personal GitHub SSH host)
+
+# Claude Code helpers
+Helpers for Anthropic's [Claude Code](https://docs.claude.com/en/docs/claude-code) CLI live in `alias/claude.sh`. They're only active when the `claude` binary is installed.
+- `cl` – launch Claude Code
+- `clc` – continue the most recent session in the current directory
+- `clr` – resume a session (picker)
+- `clp` – headless/print mode (`claude -p`), useful in pipes
+- `yolo` – `claude --dangerously-skip-permissions`
+- `clupdate` – update the CLI
+- `clcommit` – draft a commit message from the staged diff with Claude, then open it in your editor
+
+Portable slash commands (`/commit`, `/pr`, `/explain`) and a `pr-reviewer` subagent are tracked under `claude/`. Symlink them into `~/.claude` with:
 ```sh
-export DISABLE_EZA=true
+claude-setup    # alias for zSetupClaude
 ```
-This can be added into your `~/.profile` file if you want to make this change permanent when you open a new shell.
-You can do this by running the following command.
+This backs up any existing `~/.claude/commands` or `~/.claude/agents` before linking. Machine-specific Claude config (e.g. `~/.claude/settings.json`) is intentionally **not** tracked here.
+
+# Profiling startup
+To see where shell startup time is spent:
 ```sh
-echo "export DISABLE_EZA=true" >> $HOME/.profile
+ZSH_PROFILE=1 zsh -ic exit
 ```
+This loads `zsh/zprof` and prints a breakdown when the shell finishes initializing.
 
 
 # Contributions

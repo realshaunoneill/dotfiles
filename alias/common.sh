@@ -4,6 +4,7 @@ alias sudo=$'nocorrect sudo\t'
 # Disable autocorrect for common commands that get incorrectly corrected
 alias npx='nocorrect npx'
 alias nx='nocorrect nx'
+alias claude='nocorrect claude'
 
 # General
 alias ping='ping -c 5'
@@ -96,3 +97,6 @@ fi
 
 # Kubernetes
 alias k='kubectl'
+
+# Claude Code - symlink tracked commands/agents into ~/.claude (see zSetupClaude)
+alias claude-setup='zSetupClaude'

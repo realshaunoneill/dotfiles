@@ -1,3 +1,6 @@
+# Opt-in startup profiler: run `ZSH_PROFILE=1 zsh -ic exit` to see where time goes.
+[[ -n "$ZSH_PROFILE" ]] && zmodload zsh/zprof
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zsh/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block, everything else may go below.
@@ -46,6 +49,14 @@ export UPDATE_ZSH_DAYS=10
 ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="true"
 
+# Startup performance:
+# - Skip oh-my-zsh's insecure-directory audit so it uses the fast cached
+#   `compinit -C` instead of rebuilding the completion dump every launch.
+# - Disable oh-my-zsh's own auto-update; dotfile updates are handled by
+#   .zshupgrade, and OMZ self-updating can prompt/stall mid-startup.
+ZSH_DISABLE_COMPFIX="true"
+zstyle ':omz:update' mode disabled
+
 # History configuration
 HISTSIZE=50000
 SAVEHIST=50000
@@ -93,11 +104,12 @@ esac
 
 # Load essential configs first
 source $ZDOTDIR/alias/common.sh
+source $ZDOTDIR/alias/claude.sh
 
 # Lazy load OS-specific configs
-if [ $machine = "Linux" ]; then 
+if [ "$machine" = "Linux" ]; then
     source $ZDOTDIR/alias/linux.sh
-elif [ $machine = "Mac" ]; then 
+elif [ "$machine" = "Mac" ]; then
     source $ZDOTDIR/alias/mac.sh
 fi
 
@@ -159,3 +171,6 @@ fi
     cp "$ZDOTDIR/homeConfigs/tmux/.tmux.conf" "$HOME/.tmux.conf"
   fi
 } &!
+
+# Print startup profile when ZSH_PROFILE is set (see top of file)
+[[ -n "$ZSH_PROFILE" ]] && zprof

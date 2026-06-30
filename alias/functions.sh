@@ -40,11 +40,11 @@ function zSetupEza () {
   if ! command -v eza > /dev/null; then
     echo "Installing eza..."
 
-    if [ $machine = "Linux" ]; then 
+    if [ "$machine" = "Linux" ]; then
       echo "Installing eza... (Linux)"
       sudo apt-get install -y eza
 
-    elif [ $machine = "Mac" ]; then 
+    elif [ "$machine" = "Mac" ]; then
       echo "Installing eza... (Mac)"
       brew install eza
     fi
@@ -54,6 +54,45 @@ function zSetupEza () {
 function zReinstall () {
   echo "Resetting zsh config..."
   curl -s https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh | bash
+}
+
+# Symlink the tracked Claude Code commands/agents into ~/.claude so custom
+# slash commands and subagents are available on this machine. Run manually
+# (also aliased to `claude-setup`); not run on shell startup.
+function zSetupClaude () {
+  local claude_dir="$HOME/.claude"
+  local stamp
+  stamp="$(date +%Y%m%d_%H%M%S)"
+
+  mkdir -p "$claude_dir"
+
+  local sub
+  for sub in commands agents; do
+    local src="$ZDOTDIR/claude/$sub"
+    local dest="$claude_dir/$sub"
+
+    if [ ! -d "$src" ]; then
+      echo "Skipping $sub (no $src in dotfiles)"
+      continue
+    fi
+
+    # Already linked correctly? Skip.
+    if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
+      echo "$sub already linked"
+      continue
+    fi
+
+    # Back up an existing real dir or wrong symlink before replacing.
+    if [ -e "$dest" ] || [ -L "$dest" ]; then
+      echo "Backing up existing $dest to $dest.bak.$stamp"
+      mv "$dest" "$dest.bak.$stamp"
+    fi
+
+    ln -s "$src" "$dest"
+    echo "Linked $dest -> $src"
+  done
+
+  echo "Claude Code setup complete"
 }
 
 # ------------------------------- #
@@ -292,8 +331,8 @@ function ff() {
   find . -type f -iname "*$1*"
 }
 
-# Find directory by name
-function fd() {
+# Find directory by name (named fdir to avoid shadowing the `fd` find tool)
+function fdir() {
   find . -type d -iname "*$1*"
 }
 
