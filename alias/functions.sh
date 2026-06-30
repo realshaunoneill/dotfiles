@@ -404,4 +404,13 @@ function gclean() {
   echo "Cleaned up merged branches"
 }
 
+# Show all defined aliases, sorted. Pass an argument to filter (e.g. `aliases git`).
+function aliases() {
+  if [ -n "$1" ]; then
+    alias | sort | grep --color=auto -i "$1"
+  else
+    alias | sort
+  fi
+}
+
 

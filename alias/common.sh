@@ -37,11 +37,6 @@ alias tk='tmux kill-session -s'                               # kill session
 # Open ports
 alias ports-o='sudo lsof -i -P -n | grep LISTEN'
 
-# Ngrok
-alias ngrok-h='$ZDOTDIR/bin/ngrok http'
-alias ngrok-sh='$ZDOTDIR/bin/ngrok http -auth "admin:admin"'
-alias ngrok-tcp='$ZDOTDIR/bin/ngrok tcp'
-
 # Imgur Uploader
 alias upload='$ZDOTDIR/bin/imgur.sh'
 

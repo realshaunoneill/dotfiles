@@ -6,15 +6,17 @@
 
 if command -v claude &>/dev/null; then
 
-  # Launchers
-  alias cl='claude'                                 # short launcher
-  alias clc='claude --continue'                     # continue most recent session in cwd
-  alias clr='claude --resume'                       # pick a session to resume
-  alias clp='claude -p'                             # headless/print mode (good for pipes)
-  alias clupdate='claude update'                    # update the CLI
+  # All launchers skip permission prompts by default. This is consistent with
+  # skipDangerousModePermissionPrompt already set in ~/.claude/settings.json.
+  # Use `command claude` (or the `clsafe` alias below) if you want prompts.
+  alias cl='claude --dangerously-skip-permissions'              # short launcher
+  alias clc='claude --dangerously-skip-permissions --continue'  # continue most recent session in cwd
+  alias clr='claude --dangerously-skip-permissions --resume'    # pick a session to resume
+  alias clp='claude --dangerously-skip-permissions -p'          # headless/print mode (good for pipes)
+  alias clupdate='claude update'                                # update the CLI
 
-  # Skip permission prompts. Consistent with skipDangerousModePermissionPrompt
-  # already set in ~/.claude/settings.json. Use with care.
+  # Explicit aliases for when you DO want permission prompts.
+  alias clsafe='claude'
   alias yolo='claude --dangerously-skip-permissions'
 
   # Draft a commit message from the staged diff using headless Claude, then let

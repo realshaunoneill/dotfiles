@@ -43,6 +43,7 @@ There are a few customizations that I have made to my shell.
 
 # Functions
 A number of helper functions are defined in `alias/functions.sh`. Some of the handy ones:
+- `aliases [filter]` – list all defined aliases, sorted (optionally filtered, e.g. `aliases git`)
 - `extract <archive>` – extract almost any archive type
 - `mkcd <dir>` – make a directory and cd into it
 - `ff <name>` / `fdir <name>` – find files / directories by name
@@ -56,12 +57,13 @@ A number of helper functions are defined in `alias/functions.sh`. Some of the ha
 - `clone` / `clonep` – clone a repo via SSH (the `p` variant uses the personal GitHub SSH host)
 
 # Claude Code helpers
-Helpers for Anthropic's [Claude Code](https://docs.claude.com/en/docs/claude-code) CLI live in `alias/claude.sh`. They're only active when the `claude` binary is installed.
-- `cl` – launch Claude Code
+Helpers for Anthropic's [Claude Code](https://docs.claude.com/en/docs/claude-code) CLI live in `alias/claude.sh`. They're only active when the `claude` binary is installed. The launchers run with `--dangerously-skip-permissions` by default.
+- `cl` – launch Claude Code (skips permission prompts)
 - `clc` – continue the most recent session in the current directory
 - `clr` – resume a session (picker)
 - `clp` – headless/print mode (`claude -p`), useful in pipes
-- `yolo` – `claude --dangerously-skip-permissions`
+- `clsafe` – launch Claude Code *with* permission prompts
+- `yolo` – explicit `claude --dangerously-skip-permissions`
 - `clupdate` – update the CLI
 - `clcommit` – draft a commit message from the staged diff with Claude, then open it in your editor
 
