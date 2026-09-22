@@ -95,3 +95,8 @@ alias k='kubectl'
 
 # Claude Code - symlink tracked commands/agents into ~/.claude (see zSetupClaude)
 alias claude-setup='zSetupClaude'
+
+# SSH - install the thin ~/.ssh/config plus config.d fragments (see zSetupSsh).
+# Re-run after any dotfiles update that touches ssh/ - the fragments are copied,
+# not symlinked, so a pull alone does not refresh them.
+alias ssh-setup='zSetupSsh'

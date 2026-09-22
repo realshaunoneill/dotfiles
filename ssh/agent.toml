@@ -1,0 +1,27 @@
+# Installed to ~/.config/1Password/ssh/agent.toml by `zSetupSsh` (macOS only).
+#
+# This file restricts WHICH keys the 1Password SSH agent offers, and in what order.
+#
+# Its ABSENCE is not neutral: with no agent.toml, 1Password offers every SSH Key
+# item from every unlocked account. Two accounts are signed in here
+# (a personal one and a work one), so absent means any work SSH
+# key is offered to every host you ssh to, in an order you do not control — which
+# can burn ssh's MaxAuthTries before your real key is ever tried.
+#
+# The work key deliberately stays on disk at ~/.ssh/id_rsa and is NOT in
+# 1Password, so it does not belong here.
+#
+# GOTCHAS:
+#   - `item` must match the 1Password item TITLE exactly. Renaming the item
+#     silently empties the agent.
+#   - The personal vault is called "Private", not "Personal".
+#   - A typo yields an EMPTY agent rather than an error, and 1Password reloads this
+#     file automatically — so the failure arrives later and looks like a key
+#     problem. The acceptance test is to run this immediately after saving and see
+#     exactly one key:
+#       SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock" ssh-add -l
+
+[[ssh-keys]]
+item = "SSH - personal (ed25519)"
+vault = "Private"
+account = "my.1password.com"

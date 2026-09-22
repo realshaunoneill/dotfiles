@@ -1,0 +1,35 @@
+# ~/.ssh/config — installed by `zSetupSsh` (alias: `ssh-setup`). Keep this file thin.
+#
+# `Include` is processed AT THE POINT IT APPEARS, so it must be the first and only
+# directive here. Any keyword above it would be obtained first and win over every
+# fragment, and any Host/Match line above it would scope the included file's
+# leading keywords to that block instead of leaving them global.
+#
+# Fragments are read in lexical (glob) order. The contract:
+#
+#   10-github.conf      the two GitHub identities        dotfiles      (PUBLIC)
+#   20-homelab.conf     private host aliases             private repo  (symlink)
+#   30-work.conf        work bastions                    LOCAL, UNTRACKED
+#   90-1password.conf   the 1Password SSH agent          dotfiles, macOS only
+#   99-defaults.conf    the single `Host *` block        dotfiles
+#
+# TWO INVARIANTS. Both are easy to break and neither fails loudly.
+#
+# 1. Specific blocks first, `Host *` LAST. For single-valued keywords OpenSSH keeps
+#    the FIRST value it obtains, so a default in 99- is only a fallback and an
+#    earlier fragment is the exception. This is what lets 30-work.conf keep
+#    StrictHostKeyChecking=no for work while everything else gets accept-new.
+#
+# 2. NEVER put IdentityFile in a `Host *` block. It does not behave like the other
+#    keywords: it accumulates, and one configured value REPLACES OpenSSH's built-in
+#    default list. The work bastions have no explicit IdentityFile and work only
+#    because ~/.ssh/id_rsa happens to be first in that default list, so a global
+#    IdentityFile would break all work access. Same class: CertificateFile,
+#    LocalForward/RemoteForward/DynamicForward, SendEnv/SetEnv.
+#
+# A glob matching nothing is not an error, so a machine without the 20-/30-
+# fragments still works.
+#
+# Docs: ~/Personal/dotfiles/ssh/README.md (and the private repo's own ssh/README.md)
+
+Include ~/.ssh/config.d/*.conf

@@ -157,6 +157,16 @@ if [[ -o interactive ]]; then
       zSetupEza
     fi
   fi
+
+  # Prompt for the SSH config skeleton if it has never been installed. Only
+  # offered when ~/.ssh/config.d is absent, so it asks once per machine.
+  if [ ! -d "$HOME/.ssh/config.d" ] && [ -d "$ZDOTDIR/ssh" ]; then
+    printf "Would you like to install the SSH config (host aliases + 1Password agent)? (y/n) "
+    read -r setupSsh
+    if [ "$setupSsh" = "y" ]; then
+      zSetupSsh
+    fi
+  fi
 fi
 
 # Deferred non-interactive checks - run in background after shell is loaded

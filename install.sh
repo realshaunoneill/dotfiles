@@ -48,6 +48,16 @@ if [ -d "$HOME/.zsh" ]; then
     fi
 fi
 
+# Back up the SSH config too. This script rm -rf's ~/.zsh, and ~/.ssh/config.d
+# holds 30-work.conf, which is deliberately untracked and exists in no repo -
+# losing it means losing all work bastion access with nothing to restore from.
+if [ -f "$HOME/.ssh/config" ] || [ -d "$HOME/.ssh/config.d" ]; then
+    echo "Backing up SSH config to $backup_dir..."
+    mkdir -p "$backup_dir/ssh"
+    [ -f "$HOME/.ssh/config" ] && cp "$HOME/.ssh/config" "$backup_dir/ssh/config"
+    [ -d "$HOME/.ssh/config.d" ] && cp -R "$HOME/.ssh/config.d" "$backup_dir/ssh/"
+fi
+
 # OS-specific setup
 echo "Running installation for $machine..."
 
@@ -66,6 +76,16 @@ if [ -f "$backup_dir/.zsh_history" ]; then
     echo "Restoring zsh history..."
     cp "$backup_dir/.zsh_history" "$HOME/.zsh/.zsh_history"
 fi
+
+# The SSH fragments are copied into ~/.ssh/config.d rather than symlinked, so a
+# fresh clone does not refresh them - they have to be reinstalled explicitly.
+echo ""
+echo "SSH: run 'ssh-setup' in your new shell to (re)install ~/.ssh/config.d."
+if [ -d "$backup_dir/ssh/config.d" ]; then
+    echo "     Your previous config.d (including the untracked 30-work.conf) is at"
+    echo "     $backup_dir/ssh/config.d"
+fi
+echo ""
 
 # Change shell to zsh
 current_shell=$(basename "$SHELL")

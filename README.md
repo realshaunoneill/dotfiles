@@ -73,6 +73,36 @@ claude-setup    # alias for zSetupClaude
 ```
 This backs up any existing `~/.claude/commands` or `~/.claude/agents` before linking. Machine-specific Claude config (e.g. `~/.claude/settings.json`) is intentionally **not** tracked here.
 
+# SSH
+`~/.ssh/config` is kept thin — three lines of `Include` — with every host block in a numbered fragment under `~/.ssh/config.d/`. The number **is** the precedence order, because OpenSSH keeps the *first* value it obtains for each keyword. Install or refresh it with:
+```sh
+ssh-setup       # alias for zSetupSsh
+```
+It backs up whatever it replaces and is safe to re-run.
+
+| Fragment | Source | Installed as |
+| --- | --- | --- |
+| `10-github.conf` | `ssh/config.d/` here | copy |
+| `20-homelab.conf` | a **private** repo | symlink |
+| `30-work.conf` | nowhere — hand-written, local | untracked |
+| `90-1password.conf` | `ssh/config.d/` here | copy, macOS only |
+| `99-defaults.conf` | `ssh/config.d/` here | copy — the single `Host *` block |
+
+Only the portable, non-sensitive fragments are tracked here; anything that *is* a host inventory
+lives in a private repo, and the work bastions are untracked on purpose.
+
+**Fragments are copied, not symlinked** (unlike the Claude helpers above) because `zReinstall`
+removes `~/.zsh` before re-cloning, and a dangling `Include` target can break every `ssh` on the
+machine. The trade-off: **re-run `ssh-setup` after any update that touches `ssh/`.**
+
+Two invariants, both documented at length in [`ssh/README.md`](ssh/README.md): specific blocks
+first and `Host *` last, and **never put `IdentityFile` in a `Host *` block** — one configured
+value replaces OpenSSH's built-in default identity list for every host that reaches it.
+
+The private key for personal hosts is held in the 1Password SSH agent rather than on disk; `opp`
+and `opw` wrap the `op` CLI for the personal and work accounts, since a bare `op` fails when two
+accounts are signed in.
+
 # Profiling startup
 To see where shell startup time is spent:
 ```sh
