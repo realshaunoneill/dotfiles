@@ -59,11 +59,21 @@ firing *before* every password prompt.
 
 ## Copy vs symlink — deliberate, not inconsistent
 
-`zSetupClaude` symlinks into `$ZDOTDIR`; the dotfiles SSH fragments are **copied** instead. The
-reason: `zReinstall`/`install.sh` does `rm -rf "$HOME/.zsh"` before re-cloning, and a dangling
-`Include` target risks breaking *every* `ssh` on the machine — work included. Coupling "can I
-reach production" to "is the dotfiles checkout intact right now" is a bad trade for two
-near-static files. It also matches the existing `cp -r "$ZDOTDIR/.config"` idiom in `.zshrc`.
+`zSetupClaude` symlinks into `$ZDOTDIR`; the dotfiles SSH fragments are **copied** instead,
+because `zReinstall`/`install.sh` does `rm -rf "$HOME/.zsh"` before re-cloning — so a symlinked
+fragment would dangle for the duration of a clone.
+
+**Measured, so the risk is not overstated: a dangling `Include` target is NOT fatal.** With the
+symlink pointing at a missing file, `ssh -G` still exits 0, work hosts resolve normally and
+`ssh -T git@github.com` authenticates fine; the only effect is that the missing fragment's
+aliases silently stop resolving (`ssh -G <alias>` returns the bare name and your local
+username). So this is a correctness-of-aliases concern, not an availability one — but coupling
+"do my aliases exist" to "is the dotfiles checkout mid-reclone" is still a bad trade for two
+near-static files, and copying matches the existing `cp -r "$ZDOTDIR/.config"` idiom in `.zshrc`.
+
+The silent-degradation mode is the reason it matters: a vanished alias resolves to
+`<alias>` as a hostname under your own username, which fails with a confusing DNS error rather
+than anything pointing at the config.
 
 **The cost: re-run `ssh-setup` after any dotfiles update that touches `ssh/`.**
 
