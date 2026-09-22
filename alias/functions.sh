@@ -150,21 +150,42 @@ function zSetupSsh () {
   #    boxes are password-only - so it must never be vendored into these public
   #    dotfiles. Symlinked, not copied, so edits there take effect immediately and
   #    a stale copy can never mislead you.
-  local hl_src="${SSH_PRIVATE_FRAGMENT:-$HOME/Personal/home-ops/ssh/20-homelab.conf}"
+  #
+  #    The main checkout is frequently parked on a feature branch (several agent
+  #    sessions share that repo, each on its own branch under .claude/worktrees/),
+  #    and a branch that predates this fragment simply does not have the file in its
+  #    working tree. Without a fallback, running this function in that window would
+  #    report "not installed" and every homelab alias would quietly stop resolving -
+  #    which surfaces as a confusing DNS error, not as a config problem. So fall
+  #    back to any worktree that does have it, and say which one was used.
+  local hl_repo="${SSH_PRIVATE_REPO:-$HOME/Personal/home-ops}"
+  local hl_src="${SSH_PRIVATE_FRAGMENT:-$hl_repo/ssh/20-homelab.conf}"
+  local hl_via="main checkout"
+
+  if [ ! -f "$hl_src" ] && [ -z "$SSH_PRIVATE_FRAGMENT" ]; then
+    local cand
+    for cand in "$hl_repo"/.claude/worktrees/*/ssh/20-homelab.conf(N); do
+      [ -f "$cand" ] || continue
+      hl_src="$cand"
+      hl_via="worktree fallback - main checkout is on a branch without it"
+      break
+    done
+  fi
+
   local hl_dest="$frag_dir/20-homelab.conf"
   if [ -f "$hl_src" ]; then
     if [ -L "$hl_dest" ] && [ "$(readlink "$hl_dest")" = "$hl_src" ]; then
-      echo "20-homelab.conf already linked"
+      echo "20-homelab.conf already linked ($hl_via)"
     else
       if [ -e "$hl_dest" ] || [ -L "$hl_dest" ]; then
         echo "Backing up $hl_dest to $hl_dest.bak.$stamp"
         command mv "$hl_dest" "$hl_dest.bak.$stamp"
       fi
       ln -s "$hl_src" "$hl_dest"
-      echo "Linked $hl_dest -> $hl_src"
+      echo "Linked $hl_dest -> $hl_src ($hl_via)"
     fi
   else
-    echo "No private ops checkout at $hl_src - those aliases NOT installed"
+    echo "No private ops fragment found under $hl_repo - those aliases NOT installed"
   fi
 
   # 4. The work bastions are LOCAL AND UNTRACKED by design: their FQDNs must not be

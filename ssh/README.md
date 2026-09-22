@@ -96,8 +96,15 @@ ssh-setup
 
 Run `ssh-setup` before the pull and it will just report the fragments as missing.
 
-The private fragment's symlink points at that repo's **main** checkout, so editing it on a
-branch in a worktree has no effect on `~/.ssh` until the change lands there.
+The private fragment's symlink prefers that repo's **main** checkout. If the main checkout is
+parked on a branch that predates the fragment — normal when several sessions share a repo, each
+on its own branch under `.claude/worktrees/` — `zSetupSsh` **falls back to any worktree that has
+the file** and says which it used. Without that fallback the aliases would silently stop
+resolving during that window, surfacing as a confusing DNS error rather than a config problem.
+
+Override either with `SSH_PRIVATE_REPO` (a different repo root) or `SSH_PRIVATE_FRAGMENT` (an
+exact file, which also disables the fallback). Editing the fragment on a branch still has no
+effect until that branch is the one being linked.
 
 ## Verifying
 
