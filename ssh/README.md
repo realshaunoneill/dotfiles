@@ -96,15 +96,30 @@ ssh-setup
 
 Run `ssh-setup` before the pull and it will just report the fragments as missing.
 
-The private fragment's symlink prefers that repo's **main** checkout. If the main checkout is
-parked on a branch that predates the fragment — normal when several sessions share a repo, each
-on its own branch under `.claude/worktrees/` — `zSetupSsh` **falls back to any worktree that has
-the file** and says which it used. Without that fallback the aliases would silently stop
-resolving during that window, surfacing as a confusing DNS error rather than a config problem.
+The private fragment's symlink is resolved in order of how stable each location is:
+
+1. the repo's **main checkout** — the natural home, when it is on a branch that has the file;
+2. a **`.claude/worktrees/master`** worktree — a durable one whose only job is to be a
+   branch-independent source for this symlink;
+3. **any other worktree** — last resort, and it warns, because that branch may be stale.
+
+This matters because the main checkout is routinely parked on a feature branch when several
+sessions share a repo, and a branch predating the fragment simply does not have the file. Without
+the fallback the aliases would silently stop resolving in that window — surfacing as a confusing
+DNS error rather than as a config problem.
+
+Create the durable worktree **detached**, not on the `master` branch:
+
+```sh
+git -C <private-repo> worktree add --detach .claude/worktrees/master origin/master
+```
+
+A worktree *on* the `master` branch would make `git checkout master` fail in the main tree
+("already checked out"), breaking other sessions' normal workflow. Detached blocks nothing.
+Refresh it with `git -C <wt> fetch origin && git -C <wt> reset --hard origin/master`.
 
 Override either with `SSH_PRIVATE_REPO` (a different repo root) or `SSH_PRIVATE_FRAGMENT` (an
-exact file, which also disables the fallback). Editing the fragment on a branch still has no
-effect until that branch is the one being linked.
+exact file, which also disables the fallback).
 
 ## Verifying
 

@@ -156,20 +156,35 @@ function zSetupSsh () {
   #    and a branch that predates this fragment simply does not have the file in its
   #    working tree. Without a fallback, running this function in that window would
   #    report "not installed" and every homelab alias would quietly stop resolving -
-  #    which surfaces as a confusing DNS error, not as a config problem. So fall
-  #    back to any worktree that does have it, and say which one was used.
+  #    which surfaces as a confusing DNS error, not as a config problem.
+  #
+  #    So try three locations in order of how stable they are:
+  #      1. the main checkout            - the natural home, when it is on a branch
+  #                                       that has the file
+  #      2. a `master` worktree          - a durable, deliberately-created worktree
+  #                                       whose whole job is to be a branch-independent
+  #                                       source for this symlink. Detached on
+  #                                       origin/master on purpose: a worktree ON the
+  #                                       master BRANCH would make `git checkout master`
+  #                                       fail in the main tree and break other sessions.
+  #      3. any other worktree           - last resort; may be an old branch, so say so
   local hl_repo="${SSH_PRIVATE_REPO:-$HOME/Personal/home-ops}"
   local hl_src="${SSH_PRIVATE_FRAGMENT:-$hl_repo/ssh/20-homelab.conf}"
   local hl_via="main checkout"
 
   if [ ! -f "$hl_src" ] && [ -z "$SSH_PRIVATE_FRAGMENT" ]; then
-    local cand
-    for cand in "$hl_repo"/.claude/worktrees/*/ssh/20-homelab.conf(N); do
-      [ -f "$cand" ] || continue
-      hl_src="$cand"
-      hl_via="worktree fallback - main checkout is on a branch without it"
-      break
-    done
+    if [ -f "$hl_repo/.claude/worktrees/master/ssh/20-homelab.conf" ]; then
+      hl_src="$hl_repo/.claude/worktrees/master/ssh/20-homelab.conf"
+      hl_via="master worktree - main checkout is on a branch without it"
+    else
+      local cand
+      for cand in "$hl_repo"/.claude/worktrees/*/ssh/20-homelab.conf(N); do
+        [ -f "$cand" ] || continue
+        hl_src="$cand"
+        hl_via="WARNING: fell back to $(basename ${cand:h:h}) - may be a stale branch"
+        break
+      done
+    fi
   fi
 
   local hl_dest="$frag_dir/20-homelab.conf"
