@@ -233,13 +233,16 @@ function zSetupSsh () {
   fi
 
   # 7. The public half of the 1Password key. The PRIVATE key never leaves
-  #    1Password. A missing .pub is a hard failure for every IdentitiesOnly block
+  #    1Password. NOTE the item title must contain no parentheses - `op://` secret
+  #    references reject them - and `op item edit` cannot rename an SSH Key item,
+  #    so the title has to be correct at creation time.
+  #    A missing .pub is a hard failure for every IdentitiesOnly block
   #    that names it, so be loud rather than leaving a silent auth failure.
   local pub="$ssh_dir/id_ed25519_personal.pub"
   local sock="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
   if [ ! -s "$pub" ]; then
     if command -v op >/dev/null 2>&1 && \
-       op read "op://Private/SSH - personal (ed25519)/public key" \
+       op read "op://Private/SSH - personal ed25519/public key" \
           --account my.1password.com > "$pub" 2>/dev/null && [ -s "$pub" ]; then
       echo "Wrote $pub from 1Password"
     elif [ -S "$sock" ] && \

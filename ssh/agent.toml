@@ -14,6 +14,12 @@
 # GOTCHAS:
 #   - `item` must match the 1Password item TITLE exactly. Renaming the item
 #     silently empties the agent.
+#   - **The title must contain NO PARENTHESES.** `op://` secret references reject
+#     `(` and `)`, so a title like "SSH - personal (ed25519)" cannot be read with
+#     `op read` at all - which breaks the pubkey fetch in zSetupSsh.
+#   - **Get the title right at creation.** `op item edit` refuses SSH Key items
+#     entirely ("SSH Key item editing in the CLI is not yet supported"), so the
+#     only way to rename one is to delete and recreate it.
 #   - The personal vault is called "Private", not "Personal".
 #   - A typo yields an EMPTY agent rather than an error, and 1Password reloads this
 #     file automatically — so the failure arrives later and looks like a key
@@ -22,6 +28,6 @@
 #       SSH_AUTH_SOCK="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock" ssh-add -l
 
 [[ssh-keys]]
-item = "SSH - personal (ed25519)"
+item = "SSH - personal ed25519"
 vault = "Private"
 account = "my.1password.com"
