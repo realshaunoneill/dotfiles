@@ -21,12 +21,17 @@ idempotent, backs up whatever it replaces, and is safe to re-run.
 
 ### The setup path deliberately does not use `op`
 
-`zSetupSsh` takes the public key from the private repo, **not** from `op read`. That call used to
-be the only `op` invocation in the whole design, and it triggers a 1Password authorization prompt
-whose grant is **account-scoped, not item-scoped** — there is no per-item consent for the CLI, so
-approving it gives the session read access to everything the account can see, in order to move 81
-non-secret bytes. Taking it from the repo means no prompt, and it works with 1Password locked or
-on a headless box.
+`zSetupSsh` takes the public key from the private repo, **not** from `op read`. Two reasons that
+hold unconditionally: the public key **is not a secret** — it is exactly what goes into
+`authorized_keys` — and taking it from the repo works with 1Password **locked, quit, or on a
+headless box**, so setup has no dependency on the app.
+
+A third reason is weaker than it first appeared and is recorded honestly: the 1Password CLI grant
+is **account-scoped, not item-scoped** (there is no per-item consent, so authorizing `op` gives
+that session read access to everything the account can see) — that is a good argument against
+using `op` for one non-secret value. But the *prompting* that originally motivated this turned out
+to be an app **auto-lock** setting rather than CLI behaviour; with device-unlock set to Always and
+no lock on sleep, `op read` does not prompt and persists across fresh shells.
 
 `op read` survives only as a last resort for a machine that has these dotfiles but not the private
 repo, and cannot fire in the normal path. Two `op` gotchas if you ever do hit it: `op://`
