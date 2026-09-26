@@ -232,31 +232,55 @@ function zSetupSsh () {
     echo "Installed $op_dir/agent.toml (a typo here = EMPTY agent, verify below)"
   fi
 
-  # 7. The public half of the 1Password key. The PRIVATE key never leaves
-  #    1Password. NOTE the item title must contain no parentheses - `op://` secret
-  #    references reject them - and `op item edit` cannot rename an SSH Key item,
-  #    so the title has to be correct at creation time.
-  #    A missing .pub is a hard failure for every IdentitiesOnly block
+  # 7. The PUBLIC half of the 1Password key. The private half never leaves
+  #    1Password. A missing .pub is a hard failure for every IdentitiesOnly block
   #    that names it, so be loud rather than leaving a silent auth failure.
+  #
+  #    Prefer the copy tracked in the private repo, NOT `op read`. The public key is
+  #    not a secret - it is exactly what goes into authorized_keys - and fetching it
+  #    through op was the only op call in this whole function. That call triggers a
+  #    1Password authorization prompt whose grant is ACCOUNT-scoped, not item-scoped:
+  #    there is no per-item consent for the CLI, so it hands the session read access
+  #    to everything the account can see, in order to transfer 81 non-secret bytes.
+  #    Taking it from the repo means no prompt, and it works with 1Password locked or
+  #    on a headless box.
+  #
+  #    `op read` is kept only as a last resort, for a machine that has these dotfiles
+  #    but not the private repo. It cannot fire in the normal path.
   local pub="$ssh_dir/id_ed25519_personal.pub"
+  local pub_src="${hl_src:h}/id_ed25519_personal.pub"
   local sock="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-  if [ ! -s "$pub" ]; then
+
+  if [ -s "$pub_src" ]; then
+    # Symlink, matching 20-homelab.conf: a rotation in the repo lands immediately.
+    if [ -L "$pub" ] && [ "$(readlink "$pub")" = "$pub_src" ]; then
+      echo "id_ed25519_personal.pub already linked"
+    else
+      [ -e "$pub" ] || [ -L "$pub" ] && command mv "$pub" "$pub.bak.$stamp" 2>/dev/null
+      ln -s "$pub_src" "$pub"
+      echo "Linked $pub -> $pub_src"
+    fi
+  elif [ ! -s "$pub" ]; then
+    # Fallbacks. NOTE for op: the item title must contain no parentheses - `op://`
+    # references reject them - and `op item edit` cannot rename an SSH Key item, so
+    # the title has to be right at creation time.
     if command -v op >/dev/null 2>&1 && \
        op read "op://Private/SSH - personal ed25519/public key" \
           --account my.1password.com > "$pub" 2>/dev/null && [ -s "$pub" ]; then
-      echo "Wrote $pub from 1Password"
+      echo "Wrote $pub from 1Password (no repo copy found - this prompts)"
+      chmod 644 "$pub"
     elif [ -S "$sock" ] && \
          SSH_AUTH_SOCK="$sock" ssh-add -L > "$pub" 2>/dev/null && [ -s "$pub" ]; then
       echo "Wrote $pub from the 1Password agent"
+      chmod 644 "$pub"
     else
       command rm -f "$pub"
-      echo "WARNING: could not retrieve the 1Password public key."
-      echo "         Blocks using IdentitiesOnly + $pub will fall back to the"
+      echo "WARNING: no public key at $pub."
+      echo "         Blocks using IdentitiesOnly + that path fall back to the"
       echo "         transitional on-disk key until it exists."
-      echo "         1Password > Settings > Developer > 'Use the SSH agent', then re-run."
+      echo "         Expected it at $pub_src - is the private repo cloned?"
     fi
   fi
-  [ -f "$pub" ] && chmod 644 "$pub"
 
   # 8. Parse check - ssh -G fails loudly on a malformed config.
   if ssh -G github.com >/dev/null 2>&1; then

@@ -17,6 +17,25 @@ idempotent, backs up whatever it replaces, and is safe to re-run.
 | `90-1password.conf` | `dotfiles/ssh/config.d/` | copy, **macOS only** | the agent socket path is a macOS group container; on Linux it would dangle on every host |
 | `99-defaults.conf` | `dotfiles/ssh/config.d/` | copy | the single `Host *` block |
 | `agent.toml` | `dotfiles/ssh/agent.toml` | copy to `~/.config/1Password/ssh/` | restricts which 1Password keys the agent offers |
+| `id_ed25519_personal.pub` | **the private ops repo** | symlink to `~/.ssh/` | the **public** half of the agent key; the private half never leaves 1Password |
+
+### The setup path deliberately does not use `op`
+
+`zSetupSsh` takes the public key from the private repo, **not** from `op read`. That call used to
+be the only `op` invocation in the whole design, and it triggers a 1Password authorization prompt
+whose grant is **account-scoped, not item-scoped** — there is no per-item consent for the CLI, so
+approving it gives the session read access to everything the account can see, in order to move 81
+non-secret bytes. Taking it from the repo means no prompt, and it works with 1Password locked or
+on a headless box.
+
+`op read` survives only as a last resort for a machine that has these dotfiles but not the private
+repo, and cannot fire in the normal path. Two `op` gotchas if you ever do hit it: `op://`
+references reject parentheses, and `op item edit` cannot rename an SSH Key item — so the item
+title has to be right at creation.
+
+**`op` cannot enable the SSH agent.** That toggle's state lives in the app's `1password.sqlite`,
+so Settings → Developer → *Use the SSH agent* is the one irreducibly manual step. Everything
+around it is scripted.
 
 ## The two invariants
 
