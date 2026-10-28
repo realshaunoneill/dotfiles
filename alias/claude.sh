@@ -55,6 +55,9 @@ if command -v claude &>/dev/null; then
   #
   # Each worktree needs its own `npm install` in a monorepo whose branches bump
   # dependencies. That is not done here, deliberately — it is slow and repo-specific.
+  #
+  # Inside herdr the session starts in a new herdr workspace for the worktree, grouped
+  # under the repo's, rather than in the pane you ran this from.
   #   clwt PLATSERV-10211-appshell-boot-stall-and-platform-redirect appshell
   function clwt() {
     local branch="$1" name="$2"
@@ -75,15 +78,56 @@ if command -v claude &>/dev/null; then
       return 1
     fi
 
-    local path="$root/.claude/worktrees/${branch}"
-    if [ ! -d "$path" ]; then
+    # Not `path`: zsh ties that to $PATH, so `local path=...` replaced the command search
+    # path for the rest of the function, and git and claude both came back "command not
+    # found" (measured 2026-10-28).
+    local wt="$root/.claude/worktrees/${branch}"
+    if [ ! -d "$wt" ]; then
       git -C "$root" worktree prune
-      git -C "$root" worktree add "$path" "$branch" || return 1
-      echo "Worktree created. Run your install in it before serving:  (cd $path && npm install)"
+      git -C "$root" worktree add "$wt" "$branch" || return 1
+      echo "Worktree created. Run your install in it before serving:  (cd $wt && npm install)"
     fi
 
-    clw "$name" "$path"
+    if [ "${HERDR_ENV:-}" = 1 ]; then
+      _clwt_herdr "$root" "$wt" "$name" && return
+      echo "Could not open the worktree in herdr; starting the session here instead."
+    fi
+
+    clw "$name" "$wt"
   }
+
+  # Open worktree $2 of repo $1 as a herdr workspace labelled $3 and start `clw $3` in its
+  # first pane. If that worktree is already open, herdr just focuses it; its pane may be
+  # busy, so nothing is typed there.
+  #
+  # Text typed into a new pane before zsh has finished loading is lost: it lands on the
+  # command line as literal ^[[200~ paste markers and never runs. herdr has no "shell
+  # ready" flag, but oh-my-zsh sets the terminal title in precmd, just before the first
+  # real prompt, so wait for that (about 2.5 s on this Mac, 2026-10-28).
+  function _clwt_herdr() {
+    local root="$1" wt="$2" name="$3" opened pane i=0
+    opened="$(herdr worktree open --cwd "$root" --path "$wt" --label "$name" --focus)" || return 1
+    [ "$(jq -r '.result.already_open' <<<"$opened")" = false ] || return 0
+    pane="$(jq -r '.result.root_pane.pane_id' <<<"$opened")"
+
+    until [ -n "$(herdr pane get "$pane" | jq -r '.result.pane.terminal_title // empty')" ]; do
+      if (( ++i > 150 )); then
+        echo "herdr pane $pane had no prompt after 15 s; run  clw $name  in it yourself"
+        return 0
+      fi
+      sleep 0.1
+    done
+    herdr pane run "$pane" "clw $(printf '%q' "$name")" >/dev/null
+  }
+
+  # herdr (a terminal multiplexer for coding agents): one persistent session for work
+  # and one for personal, so either can be put away with `herdr session stop work`
+  # without touching the other. Both read the same ~/.config/herdr/config.toml. Plain
+  # `herdr` opens a third session, "default".
+  if command -v herdr &>/dev/null; then
+    alias hw='herdr --session work'
+    alias hp='herdr --session personal'
+  fi
 
   # Run a session on one of the GPT models the llmproxy also serves.
   #

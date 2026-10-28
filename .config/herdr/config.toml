@@ -1,0 +1,30 @@
+# herdr configuration. Every option with its default: `herdr --default-config`.
+# Validate with `herdr config check`; apply to a running session with
+# `herdr server reload-config`.
+onboarding = false
+
+[keys]
+# Not the default ctrl+b: Claude Code uses ctrl+b to send a running task to the
+# background. macOS's own ctrl+space (switch input source) is turned off on this Mac.
+prefix = "ctrl+space"
+
+# Direct chords as well as the prefix ones, from herdr's keyboard guide. iTerm2 and
+# macOS leave ctrl+alt free.
+focus_pane_left = ["prefix+h", "ctrl+alt+h"]
+focus_pane_down = ["prefix+j", "ctrl+alt+j"]
+focus_pane_up = ["prefix+k", "ctrl+alt+k"]
+focus_pane_right = ["prefix+l", "ctrl+alt+l"]
+split_vertical = ["prefix+v", "ctrl+alt+d"]
+zoom = ["prefix+z", "ctrl+alt+z"]
+
+[ui]
+# Ask for a label when creating a workspace, so the sidebar names the repo.
+prompt_new_workspace_name = true
+
+[ui.toast]
+# A macOS notification when an agent in another workspace is blocked or done. This is
+# also how the work and personal sessions reach you while you're in the other one.
+delivery = "system"
+
+# [experimental] pane_history stays off (the default). It would write recent pane
+# output, tokens included, to session-history.json on this Mac.
