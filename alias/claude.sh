@@ -56,8 +56,8 @@ if command -v claude &>/dev/null; then
   # Each worktree needs its own `npm install` in a monorepo whose branches bump
   # dependencies. That is not done here, deliberately — it is slow and repo-specific.
   #
-  # Inside herdr the session starts in a new herdr workspace for the worktree, grouped
-  # under the repo's, rather than in the pane you ran this from.
+  # Inside herdr the session starts in a new herdr workspace of its own for the worktree,
+  # rather than in the pane you ran this from.
   #   clwt PLATSERV-10211-appshell-boot-stall-and-platform-redirect appshell
   function clwt() {
     local branch="$1" name="$2"
@@ -97,18 +97,31 @@ if command -v claude &>/dev/null; then
   }
 
   # Open worktree $2 of repo $1 as a herdr workspace labelled $3 and start `clw $3` in its
-  # first pane. If that worktree is already open, herdr just focuses it; its pane may be
-  # busy, so nothing is typed there.
+  # first pane. It is a plain workspace rather than `herdr worktree open`, which also adds
+  # a workspace for the repo to group its worktrees under. Workspaces here are per task,
+  # rooted at ~/Development or ~/Personal, so that would just be an extra idle shell per
+  # repo.
+  #
+  # If a workspace is already open on the worktree, focus it instead. It may well hold a
+  # session already, and two sessions in one worktree is what worktrees are for avoiding.
+  # `herdr worktree list` reports that through open_workspace_id even for plain workspaces.
   #
   # Text typed into a new pane before zsh has finished loading is lost: it lands on the
   # command line as literal ^[[200~ paste markers and never runs. herdr has no "shell
   # ready" flag, but oh-my-zsh sets the terminal title in precmd, just before the first
   # real prompt, so wait for that (about 2.5 s on this Mac, 2026-10-28).
   function _clwt_herdr() {
-    local root="$1" wt="$2" name="$3" opened pane i=0
-    opened="$(herdr worktree open --cwd "$root" --path "$wt" --label "$name" --focus)" || return 1
-    [ "$(jq -r '.result.already_open' <<<"$opened")" = false ] || return 0
-    pane="$(jq -r '.result.root_pane.pane_id' <<<"$opened")"
+    local root="$1" wt="$2" name="$3" open pane i=0
+    open="$(herdr worktree list --cwd "$root" | jq -r --arg p "$wt" \
+      '.result.worktrees[] | select(.path == $p) | .open_workspace_id // empty')"
+    if [ -n "$open" ]; then
+      herdr workspace focus "$open" >/dev/null
+      echo "That worktree is already open in herdr workspace $open; focused it."
+      return 0
+    fi
+
+    pane="$(herdr workspace create --cwd "$wt" --label "$name" --focus | jq -r '.result.root_pane.pane_id // empty')"
+    [ -n "$pane" ] || return 1
 
     until [ -n "$(herdr pane get "$pane" | jq -r '.result.pane.terminal_title // empty')" ]; do
       if (( ++i > 150 )); then

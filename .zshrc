@@ -135,6 +135,13 @@ fi
 # Load functions (moved after p10k for faster prompt)
 source $ZDOTDIR/alias/functions.sh
 
+# In a herdr pane, stop the Kiro CLI block in .zprofile from re-running the shell inside
+# its kiro-cli-term pty. That wrapper becomes the pane's foreground process and hides
+# claude from herdr, which then shows no agent status, can't target the agent and can't
+# resume it after a restart (measured 2026-10-28). PROCESS_LAUNCHED_BY_Q is Kiro's own
+# "skip" check. It is not exported, so it only affects this shell's startup.
+[[ -n "${HERDR_ENV:-}" ]] && PROCESS_LAUNCHED_BY_Q=1
+
 # Source .zprofile if it exists
 [[ -f $HOME/.zprofile ]] && source $HOME/.zprofile
 
