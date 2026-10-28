@@ -18,8 +18,10 @@ split_vertical = ["prefix+v", "ctrl+alt+d"]
 zoom = ["prefix+z", "ctrl+alt+z"]
 
 [ui]
-# Ask for a label when creating a workspace, so the sidebar names the task.
-prompt_new_workspace_name = true
+# Don't ask for a workspace name. The first Claude session in the workspace names it:
+# the clw name at the first prompt, or Claude's own title after its first reply
+# (~/.claude/hooks/herdr-workspace-title.sh). Until then it shows its folder's name.
+prompt_new_workspace_name = false
 
 # Give each Claude row in the sidebar a second line with its terminal title. Claude
 # puts the session's --name there (from clw); herdr strips the spinner glyph in front.
