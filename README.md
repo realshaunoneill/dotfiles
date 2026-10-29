@@ -88,7 +88,7 @@ claude-setup    # alias for zSetupClaude
 This backs up any existing `~/.claude/commands`, `~/.claude/agents` or same-named hook before linking. Hooks are linked one file at a time, because herdr installs its own hook script into `~/.claude/hooks`. Machine-specific Claude config (e.g. `~/.claude/settings.json`, which says which hooks run) is intentionally **not** tracked here.
 
 - `claude/hooks/herdr-workspace-title.sh` names a [herdr](https://herdr.dev) workspace after the Claude session in it. It runs on `UserPromptSubmit` and `Stop`.
-- `claude/statusline.sh` is the status line under each Claude session: model and effort, context used, repo and branch (`wt` in a linked worktree), the branch's PR, minutes left on the prompt cache, and estimated cost. It still hands the session data to Orca's status line hook. Turn it on in `~/.claude/settings.json`:
+- `claude/statusline.sh` is the status line under each Claude session: model and effort, context used, repo and branch (`wt` in a linked worktree), the branch's open PR as a link, minutes left on the prompt cache, and estimated cost. A session started outside a repo, such as `~/Development`, shows the repo it last worked in (found in its transcript), and gets that branch's PR from `gh pr view`, cached for five minutes. It still hands the session data to Orca's status line hook. Turn it on in `~/.claude/settings.json`:
   ```json
   "statusLine": { "type": "command", "command": "bash ~/.claude/statusline.sh", "refreshInterval": 30 }
   ```
