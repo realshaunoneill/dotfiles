@@ -3,10 +3,21 @@
 # ------------------------------- #
 
 # Updates the home directory config files from the dotfiles config
+# Copies each folder of .config into ~/.config. It used to be `cp -r .config ~/.config`,
+# which nested everything in ~/.config/.config. herdr's config.toml is symlinked instead
+# (see the top of that file); cp -R fails on the existing link. `command` skips the
+# interactive cp alias in common.sh.
 function zResetLocalConfig () {
   echo "Resetting home directory config folder and tmux config"
-  cp $ZDOTDIR/homeConfigs/tmux/.tmux.conf $HOME/.tmux.conf
-  cp -r $ZDOTDIR/.config $HOME/.config
+  command cp "$ZDOTDIR/homeConfigs/tmux/.tmux.conf" "$HOME/.tmux.conf"
+
+  local d
+  for d in "$ZDOTDIR"/.config/*(N); do
+    [[ ${d:t} == herdr ]] && continue
+    command cp -R "$d" "$HOME/.config/"
+  done
+  command mkdir -p "$HOME/.config/herdr"
+  ln -sfn "$ZDOTDIR/.config/herdr/config.toml" "$HOME/.config/herdr/config.toml"
 }
 
 # Updates the home directory vim config from the dotfiles config
@@ -56,43 +67,54 @@ function zReinstall () {
   curl -s https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh | bash
 }
 
-# Symlink the tracked Claude Code commands/agents into ~/.claude so custom
-# slash commands and subagents are available on this machine. Run manually
+# Symlink the tracked Claude Code commands, agents and hooks into ~/.claude so custom
+# slash commands, subagents and hook scripts are available on this machine. Run manually
 # (also aliased to `claude-setup`); not run on shell startup.
+#
+# Hooks are linked file by file, not as a folder: herdr's integration installs its own
+# herdr-agent-state.sh into ~/.claude/hooks, which with the folder linked would land in
+# this repo. Which hooks run is set in ~/.claude/settings.json, which isn't tracked.
 function zSetupClaude () {
   local claude_dir="$HOME/.claude"
   local stamp
   stamp="$(date +%Y%m%d_%H%M%S)"
 
-  mkdir -p "$claude_dir"
+  command mkdir -p "$claude_dir/hooks"
 
   local sub
   for sub in commands agents; do
-    local src="$ZDOTDIR/claude/$sub"
-    local dest="$claude_dir/$sub"
-
-    if [ ! -d "$src" ]; then
-      echo "Skipping $sub (no $src in dotfiles)"
+    if [ ! -d "$ZDOTDIR/claude/$sub" ]; then
+      echo "Skipping $sub (no $ZDOTDIR/claude/$sub in dotfiles)"
       continue
     fi
+    _zClaudeLink "$ZDOTDIR/claude/$sub" "$claude_dir/$sub" "$stamp"
+  done
 
-    # Already linked correctly? Skip.
-    if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
-      echo "$sub already linked"
-      continue
-    fi
-
-    # Back up an existing real dir or wrong symlink before replacing.
-    if [ -e "$dest" ] || [ -L "$dest" ]; then
-      echo "Backing up existing $dest to $dest.bak.$stamp"
-      mv "$dest" "$dest.bak.$stamp"
-    fi
-
-    ln -s "$src" "$dest"
-    echo "Linked $dest -> $src"
+  local hook
+  for hook in "$ZDOTDIR"/claude/hooks/*(N); do
+    _zClaudeLink "$hook" "$claude_dir/hooks/${hook:t}" "$stamp"
   done
 
   echo "Claude Code setup complete"
+}
+
+# Point $2 at $1, backing up a real file or wrong link at $2 first. A correct link is left
+# alone.
+function _zClaudeLink () {
+  local src="$1" dest="$2" stamp="$3"
+
+  if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
+    echo "${dest:t} already linked"
+    return
+  fi
+
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    echo "Backing up existing $dest to $dest.bak.$stamp"
+    command mv "$dest" "$dest.bak.$stamp"
+  fi
+
+  ln -s "$src" "$dest"
+  echo "Linked $dest -> $src"
 }
 
 # Install the SSH config skeleton: a thin ~/.ssh/config that Includes

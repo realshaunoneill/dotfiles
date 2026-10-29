@@ -3,8 +3,8 @@
 # `herdr server reload-config`.
 #
 # ~/.config/herdr/config.toml is a symlink to this file in the ~/.zsh clone, so a change
-# goes live with `git -C ~/.zsh pull` and a reload. Made by hand on a new machine:
-#   ln -s ~/.zsh/.config/herdr/config.toml ~/.config/herdr/config.toml
+# goes live with `git -C ~/.zsh pull` and a reload. zResetLocalConfig (alias/functions.sh)
+# makes the link on a new machine.
 # herdr writes through the link rather than replacing it (`herdr config reset-keys`,
 # tested 2026-10-29).
 onboarding = false
