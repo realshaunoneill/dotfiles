@@ -38,9 +38,9 @@ next_agent = "ctrl+alt+n"
 # task title; the default is "{hostname}: {workspace}".
 window_title = ""
 
-# The agent list as an attention queue, blocked agents first, rather than grouped by
-# workspace.
-agent_panel_sort = "priority"
+# agent_panel_sort stays "spaces". "priority" (blocked agents first) was tried on
+# 2026-10-29, but then the agent list no longer matched the workspace order that
+# previous/next_workspace step through.
 
 # Don't ask for a workspace name. The first Claude session in the workspace names it:
 # the clw name at the first prompt, or Claude's own title after its first reply
