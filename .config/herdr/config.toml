@@ -96,9 +96,12 @@ prompt_new_workspace_name = false
 # "Receipt Wise · ipad") with their names dimmed underneath. herdr's default last line, the
 # agent kind, is dropped because it only ever says "claude". "machine" only shows for agents
 # on other machines, which this setup has none of.
+# A token keeps its usual look for any style field left out, and the title is normally
+# drawn dim, so moved to the first line it stayed dark. Hence the explicit colour: the
+# catppuccin theme's text colour (#cdd6f4), which a theme change won't follow.
 [ui.sidebar.agents.rows_by_agent]
 claude = [
-  ["state_icon", { token = "terminal_title_stripped", bold = true }],
+  ["state_icon", { token = "terminal_title_stripped", fg = "#cdd6f4", bold = true, dim = false }],
   [{ token = "workspace", dim = true }, { token = "tab", dim = true }],
 ]
 
