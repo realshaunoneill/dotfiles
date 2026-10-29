@@ -17,9 +17,16 @@ brew "gh"           # GitHub CLI; also git's credential helper for github.com
 brew "git-delta"    # pager for git diff/log/show (git/config)
 brew "gnupg"        # commit signing
 
+# Neovim with LazyVim (.config/nvim), and the herdr editor keys (bin/herdr-*)
+brew "neovim"
+brew "lazygit"          # LazyVim's git screen
+brew "tree-sitter-cli"  # builds the syntax parsers LazyVim installs
+brew "bat"              # previews in the herdr-find-file popup
+cask "font-sauce-code-pro-nerd-font"  # Source Code Pro with the icons LazyVim draws
+
 # Quality-of-life CLI tools used by functions/aliases
-brew "ripgrep"      # fast grep (rg)
-brew "fd"           # fast find (note: shell fn is `fdir` to avoid shadowing)
+brew "ripgrep"      # fast grep (rg); LazyVim's search
+brew "fd"           # fast find (note: shell fn is `fdir` to avoid shadowing); LazyVim's file finder
 brew "tmux"         # tn/ta/tl/tk aliases, homeConfigs/tmux
 brew "wget"
 

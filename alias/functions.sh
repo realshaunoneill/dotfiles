@@ -4,20 +4,25 @@
 
 # Updates the home directory config files from the dotfiles config
 # Copies each folder of .config into ~/.config. It used to be `cp -r .config ~/.config`,
-# which nested everything in ~/.config/.config. herdr's config.toml is symlinked instead
-# (see the top of that file); cp -R fails on the existing link. `command` skips the
-# interactive cp alias in common.sh.
+# which nested everything in ~/.config/.config. Two are symlinked instead, and cp -R fails on
+# an existing link: herdr's config.toml (see the top of that file), and Neovim's config, which
+# Neovim writes lazy-lock.json into, so it links to the clone you commit from when there is
+# one. `command` skips the interactive cp alias in common.sh.
 function zResetLocalConfig () {
   echo "Resetting home directory config folder and tmux config"
   command cp "$ZDOTDIR/homeConfigs/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
   local d
   for d in "$ZDOTDIR"/.config/*(N); do
-    [[ ${d:t} == herdr ]] && continue
+    [[ ${d:t} == (herdr|nvim) ]] && continue
     command cp -R "$d" "$HOME/.config/"
   done
   command mkdir -p "$HOME/.config/herdr"
   ln -sfn "$ZDOTDIR/.config/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+
+  local nvim="$HOME/Personal/dotfiles/.config/nvim"
+  [ -d "$nvim" ] || nvim="$ZDOTDIR/.config/nvim"
+  [ -e "$HOME/.config/nvim" ] || ln -s "$nvim" "$HOME/.config/nvim"
 }
 
 # Updates the home directory vim config from the dotfiles config
