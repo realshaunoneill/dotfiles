@@ -24,16 +24,20 @@ focus_pane_right = ["prefix+l", "ctrl+alt+l"]
 split_vertical = ["prefix+v", "ctrl+alt+d"]
 zoom = ["prefix+z", "ctrl+alt+z"]
 
-# All unbound by default. prefix then up/down (navigate mode) also moves between
-# workspaces, and prefix+o jumps to whichever agent last raised a notification.
+# All unbound by default. ctrl+alt+up/down step through the sidebar's agent rows, so two
+# agents in one workspace (in different tabs) are two stops. Until 2026-10-29 they stepped
+# by workspace, which made those one stop and skipped the second. Workspace stepping, which
+# also reaches a workspace with no agent in it, is on shift. prefix then up/down (navigate
+# mode) moves between workspaces too, and prefix+o jumps to whichever agent last raised a
+# notification.
 # ⌘⌥↑/↓ can't be bound here: iTerm keeps ⌘ chords for itself. An iTerm key binding that
 # sends the escape sequence [1;7A / [1;7B, which is what ctrl+alt+up/down send, makes them
 # work too (Settings → Keys → Key Bindings). Not set up yet as of 2026-10-29.
-previous_workspace = "ctrl+alt+up"
-next_workspace = "ctrl+alt+down"
+previous_agent = ["ctrl+alt+up", "ctrl+alt+p"]
+next_agent = ["ctrl+alt+down", "ctrl+alt+n"]
+previous_workspace = "ctrl+alt+shift+up"
+next_workspace = "ctrl+alt+shift+down"
 switch_workspace = "ctrl+alt+1..9"
-previous_agent = "ctrl+alt+p"
-next_agent = "ctrl+alt+n"
 
 # Code for the focused pane: its own repo, or the repo its Claude session last worked in when
 # it started outside one (~/Development). Scripts in ~/.zsh/bin; bin/agent-where picks the repo.
@@ -82,7 +86,7 @@ window_title = ""
 
 # agent_panel_sort stays "spaces". "priority" (blocked agents first) was tried on
 # 2026-10-29, but then the agent list no longer matched the workspace order that
-# previous/next_workspace step through.
+# ctrl+alt+up/down stepped through at the time.
 
 # Don't ask for a workspace name. The first Claude session in the workspace names it:
 # the clw name at the first prompt, or Claude's own title after its first reply
