@@ -47,10 +47,11 @@ window_title = ""
 # (~/.claude/hooks/herdr-workspace-title.sh). Until then it shows its folder's name.
 prompt_new_workspace_name = false
 
-# Give each Claude row in the sidebar a second line with its terminal title. Claude
-# puts the session's --name there (from clw); herdr strips the spinner glyph in front.
+# Each Claude row in the sidebar: its workspace, then its terminal title. Claude puts the
+# session's --name there (from clw); herdr strips the spinner glyph in front. The
+# default last line, the agent's name, is dropped because it only ever says "claude".
 [ui.sidebar.agents.rows_by_agent]
-claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"]]
 
 [ui.toast]
 # A macOS notification when an agent in another workspace is blocked or done. This is
