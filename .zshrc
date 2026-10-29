@@ -102,6 +102,12 @@ case "${unameOut}" in
     *)          machine="UNKNOWN:${unameOut}"
 esac
 
+# Add user's private bin directories to PATH. Before the alias files, because they check
+# for tools that live here (claude.sh defines hw/hp only if herdr, in ~/.local/bin, is
+# found). Kiro CLI's shell wrapper used to hide the wrong order by re-running the shell
+# with the finished PATH; after it was removed (2026-10-29), hp was "command not found".
+export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.zsh/bin
+
 # Load essential configs first
 source $ZDOTDIR/alias/common.sh
 source $ZDOTDIR/alias/claude.sh
@@ -119,9 +125,6 @@ nvm() {
   [ -s "$ZDOTDIR/appConfigs/nvm.zsh" ] && source "$ZDOTDIR/appConfigs/nvm.zsh"
   nvm "$@"
 }
-
-# Add user's private bin directories to PATH
-export PATH=$PATH:$HOME/bin:$HOME/.local/bin:$HOME/.zsh/bin
 
 # Source upgrade system
 source $ZDOTDIR/.zshupgrade
