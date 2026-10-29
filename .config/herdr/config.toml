@@ -60,3 +60,17 @@ delivery = "system"
 
 # [experimental] pane_history stays off (the default). It would write recent pane
 # output, tokens included, to session-history.json on this Mac.
+
+# clgpt (alias/claude.sh) runs the same claude binary with an extra --settings layer
+# that leaves the hooks in ~/.claude/settings.json alone, so herdr should treat a GPT
+# session as Claude: state, notifications, the sidebar rows above and the workspace
+# name. Worked out from the setup on 2026-10-29, not yet tried live. Known gaps, none
+# fixed:
+# - A GPT row looks the same as a Claude one. Name the session, model first, because
+#   clgpt reads its first argument as the model: `clgpt claude-code-gpt-6-sol --name x`.
+# - clwt always starts Claude; it has no GPT option.
+# - After a herdr server restart a GPT session comes back on Claude. herdr keeps only
+#   the session id (session.json) and reopens the pane with its own `claude --resume`,
+#   which has none of clgpt's settings. A fix would need clgpt as a script on PATH,
+#   reported to herdr as the resume command with
+#   `herdr pane report-agent-session <pane> ... -- <command>`.
