@@ -131,7 +131,7 @@ accounts are signed in.
 [herdr](https://herdr.dev) is the terminal multiplexer the Claude sessions run in. Its config is `.config/herdr/config.toml`, which `~/.config/herdr/config.toml` links to; a change goes live with `zupdate` and `herdr server reload-config`. That file's comments give the reason for each setting.
 - `hw` / `hp` – open the `work` and `personal` herdr sessions. Each titles its iTerm tab "Development" or "Personal", and either can be put away with `herdr session stop` without touching the other.
 - The prefix key is `ctrl+space` (not herdr's default `ctrl+b`, which Claude Code uses); `prefix+?` lists every binding.
-- `ctrl+alt+↑/↓` – previous / next workspace; `ctrl+alt+1..9` – jump to one. `ctrl+alt+n/p` – next / previous agent.
+- `ctrl+alt+↑/↓` (or `ctrl+alt+p/n`) – previous / next agent, every row in the sidebar's agent list. `ctrl+alt+shift+↑/↓` – previous / next workspace, including ones with no agent; `ctrl+alt+1..9` – jump to one.
 - A new workspace is named after the first Claude session in it, by `claude/hooks/herdr-workspace-title.sh`.
 - herdr draws no clickable links (OSC 8 hyperlinks are dropped), so the keys below stand in where a link would.
 
