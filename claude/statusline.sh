@@ -15,11 +15,11 @@ if [ -x "$orca" ]; then
   printf '%s' "$input" | /bin/sh "$orca" >/dev/null 2>&1 &
 fi
 
-IFS=$'\x1f' read -r model effort ctx dir worktree repo pr pr_state cache_seen cache_warm cache_expires cost < <(
+IFS=$'\x1f' read -r model effort ctx dir worktree repo pr pr_url pr_state cache_seen cache_warm cache_expires cost < <(
   /usr/bin/jq -r '[
     .model.display_name, .effort.level, .context_window.used_percentage,
     (.workspace.current_dir // .cwd), .workspace.git_worktree, .workspace.repo.name,
-    .pr.number, .pr.review_state,
+    .pr.number, .pr.url, .pr.review_state,
     .prompt_cache.caching_observed, .prompt_cache.warm, .prompt_cache.expires_at,
     .cost.total_cost_usd
   ] | map(if . == null then "" else tostring end) | join("\u001f")' <<<"$input" 2>/dev/null
@@ -51,7 +51,10 @@ if [ -n "$pr" ]; then
     pending) c=$yellow ;;
     *) c=$dim ;;
   esac
-  parts+=("PR #${pr}${pr_state:+ ${c}${pr_state}${reset}}")
+  label="PR #${pr}"
+  # An OSC 8 hyperlink: cmd+click in iTerm opens the PR.
+  [ -n "$pr_url" ] && label=$'\033]8;;'"${pr_url}"$'\033\\'"${label}"$'\033]8;;\033\\'
+  parts+=("${label}${pr_state:+ ${c}${pr_state}${reset}}")
 fi
 
 # Minutes until the cached prompt prefix expires: replying before then is cheaper. Shown
