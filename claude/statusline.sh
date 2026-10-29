@@ -26,22 +26,6 @@ IFS=$'\x1f' read -r model effort ctx dir transcript pr pr_url pr_state cache_see
   ] | map(if . == null then "" else tostring end) | join("\u001f")' <<<"$input" 2>/dev/null
 )
 
-# The newest path under $HOME in this session's recent tool calls that lies inside a git work
-# tree, for a session whose own directory isn't one. Prints that work tree's top level.
-last_repo() {
-  [ -r "$1" ] || return 1
-  local p
-  tail -c 400000 "$1" | tail -n +2 |
-    /usr/bin/jq -r 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use")
-      | .input | (.file_path // .path // .command // empty)' 2>/dev/null |
-    grep -oE "(~|$HOME)/[^[:space:]\"'\`;|&()<>]+" | sed "s|^~|$HOME|" |
-    tail -r | awk '!seen[$0]++' | head -n 15 |
-    while IFS= read -r p; do
-      while [ -n "$p" ] && [ ! -d "$p" ]; do p=${p%/*}; done
-      [ -n "$p" ] && [ "$p" != "$HOME" ] && git -C "$p" rev-parse --show-toplevel 2>/dev/null && break
-    done
-}
-
 # Prints "number<US>url<US>state" for the open PR of branch $2 in work tree $1, from
 # `gh pr view`, which also finds merged and closed ones. That's a network call, so the answer
 # is cached for five minutes and refreshed in the background; the status line never waits.
@@ -80,7 +64,7 @@ top="" lead="" from_transcript=""
 if [ -n "$dir" ]; then
   top=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)
   if [ -z "$top" ]; then
-    top=$(last_repo "$transcript")
+    top=$("$HOME/.zsh/bin/agent-where" --transcript "$transcript")
     [ -n "$top" ] && lead="${dim}${dir##*/} ›${reset} " from_transcript=1
   fi
 fi
@@ -114,7 +98,8 @@ if [ -n "$pr" ]; then
     *) c=$dim ;;
   esac
   label="PR #${pr}"
-  # An OSC 8 hyperlink: cmd+click in iTerm opens the PR.
+  # An OSC 8 hyperlink: cmd+click in iTerm opens the PR. herdr drops these links, so inside
+  # herdr ctrl+alt+g (bin/herdr-pr) opens it instead.
   [ -n "$pr_url" ] && label=$'\033]8;;'"${pr_url}"$'\033\\'"${label}"$'\033]8;;\033\\'
   parts+=("${label}${pr_state:+ ${c}${pr_state}${reset}}")
 fi

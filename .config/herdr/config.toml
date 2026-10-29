@@ -31,6 +31,40 @@ switch_workspace = "ctrl+alt+1..9"
 previous_agent = "ctrl+alt+p"
 next_agent = "ctrl+alt+n"
 
+# Code for the focused pane: its own repo, or the repo its Claude session last worked in when
+# it started outside one (~/Development). Scripts in ~/.zsh/bin; bin/agent-where picks the repo.
+[[keys.command]]
+key = "ctrl+alt+e"
+type = "shell"
+command = "$HOME/.zsh/bin/herdr-code"
+description = "project in VS Code"
+
+[[keys.command]]
+key = "ctrl+alt+o"
+type = "shell"
+command = "$HOME/.zsh/bin/herdr-code --edited"
+description = "file Claude last edited, in VS Code"
+
+[[keys.command]]
+key = "ctrl+alt+f"
+type = "popup"
+command = "$HOME/.zsh/bin/herdr-find-file"
+description = "find a file in the project"
+width = "90%"
+height = "85%"
+
+[[keys.command]]
+key = "ctrl+alt+v"
+type = "pane"
+command = "$HOME/.zsh/bin/herdr-nvim"
+description = "project in Neovim"
+
+[[keys.command]]
+key = "ctrl+alt+g"
+type = "shell"
+command = "$HOME/.zsh/bin/herdr-pr"
+description = "pull request in the browser"
+
 [ui]
 # Leave the iTerm tab title alone, so the "Development" / "Personal" that hw / hp set
 # stays. This file is shared by both sessions and the title has no session token, so

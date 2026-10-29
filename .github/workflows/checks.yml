@@ -22,7 +22,7 @@ jobs:
           done
 
       - name: shellcheck
-        run: shellcheck --severity=warning install.sh bin/*.sh claude/*.sh claude/hooks/*.sh
+        run: shellcheck --severity=warning install.sh $(git ls-files bin claude/statusline.sh claude/hooks)
 
   secrets:
     runs-on: ubuntu-latest

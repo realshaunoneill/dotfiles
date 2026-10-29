@@ -1,0 +1,21 @@
+#!/bin/bash
+# herdr popup: fuzzy-find a file in the focused pane's project (see agent-where) with a
+# syntax-highlighted preview. Enter opens it in VS Code, ctrl-e in Neovim inside the popup,
+# esc closes. Tracked and untracked files, without what .gitignore excludes.
+
+PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/bin:/bin:$PATH"
+
+repo=$("$HOME/.zsh/bin/agent-where" --pane "${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}") || {
+  echo "No project found for this pane. Press any key to close."
+  read -r -n 1 -s
+  exit 1
+}
+cd "$repo" || exit 1
+
+git ls-files --cached --others --exclude-standard | awk '!seen[$0]++' |
+  fzf --prompt "${repo##*/} > " \
+    --header 'enter: VS Code · ctrl-e: Neovim · esc: close' \
+    --preview 'bat --color=always --style=numbers,changes --line-range :500 -- {}' \
+    --preview-window 'right,60%,border-left' \
+    --bind "enter:become(\"$HOME/.zsh/bin/herdr-code\" {})" \
+    --bind 'ctrl-e:become(nvim -- {})'

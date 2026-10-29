@@ -1,0 +1,19 @@
+#!/bin/bash
+# Open the pull request for the focused herdr pane's project (see agent-where) in the browser.
+# A herdr key does this rather than a click on the status line's PR link: herdr 0.9.5 drops
+# OSC 8 hyperlinks from what it draws (tested 2026-10-29), so links can't be clicked there.
+
+PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/bin:/bin:$PATH"
+
+fail() {
+  "${HERDR_BIN_PATH:-herdr}" notification show "Open pull request" --body "$1" >/dev/null 2>&1 ||
+    echo "$1" >&2
+  exit 1
+}
+
+repo=$("$HOME/.zsh/bin/agent-where" --pane "${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}") ||
+  fail "No project found for this pane."
+branch=$(git -C "$repo" symbolic-ref --short -q HEAD) || fail "${repo##*/} isn't on a branch."
+cd "$repo" || exit 1
+GH_PROMPT_DISABLED=1 gh pr view "$branch" --web >/dev/null 2>&1 ||
+  fail "No pull request found for ${repo##*/} ⎇ $branch."

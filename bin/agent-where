@@ -1,0 +1,78 @@
+#!/bin/bash
+# Where a coding agent is working, for the Claude status line and the herdr editor keys.
+#   agent-where --pane ID          the herdr pane's repo: its own directory when that is a git
+#                                  work tree, else the repo its Claude session last worked in
+#   agent-where --transcript FILE  the repo that Claude session last worked in
+#   add --file                     the file the session last edited instead, as path:line
+# "Last worked in" is the newest path under $HOME in the session's recent tool calls that lies
+# inside a git work tree, so a session started in ~/Development still has an answer. Prints
+# the top level of the work tree (a linked worktree's own path). Exits 1 with no answer.
+
+PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/bin:/bin:$PATH"
+
+mode=repo pane="" transcript=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --file) mode="file" ;;
+    --pane) pane=$2; shift ;;
+    --transcript) transcript=$2; shift ;;
+    *) echo "usage: agent-where [--file] (--pane ID | --transcript FILE)" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+if [ -n "$pane" ]; then
+  info=$("${HERDR_BIN_PATH:-herdr}" pane get "$pane" 2>/dev/null) || exit 1
+  if [ "$mode" = repo ]; then
+    cwd=$(jq -r '.result.pane.foreground_cwd // .result.pane.cwd // empty' <<<"$info")
+    if [ -n "$cwd" ] && top=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null); then
+      echo "$top"
+      exit 0
+    fi
+  fi
+  id=$(jq -r 'select(.result.pane.agent == "claude") | .result.pane.agent_session.value // empty' <<<"$info")
+  if [ -n "$id" ]; then
+    for f in "$HOME"/.claude/projects/*/"$id".jsonl; do
+      [ -r "$f" ] && transcript=$f && break
+    done
+  fi
+fi
+[ -n "$transcript" ] && [ -r "$transcript" ] || exit 1
+
+# The session's recent tool calls, oldest first, one {name, input} object per line. The first
+# line is dropped because tail -c usually cuts it in half.
+recent_tool_calls() {
+  tail -c 400000 "$transcript" | tail -n +2 |
+    jq -c 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use")
+      | {name, input}' 2>/dev/null
+}
+
+if [ "$mode" = repo ]; then
+  top=$(
+    recent_tool_calls | jq -r '.input | (.file_path // .notebook_path // .path // .command // empty)' |
+      grep -oE "(~|$HOME)/[^[:space:]\"'\`;|&()<>]+" | sed "s|^~|$HOME|" |
+      tail -r | awk '!seen[$0]++' | head -n 15 |
+      while IFS= read -r p; do
+        while [ -n "$p" ] && [ ! -d "$p" ]; do p=${p%/*}; done
+        [ -n "$p" ] && [ "$p" != "$HOME" ] && git -C "$p" rev-parse --show-toplevel 2>/dev/null && break
+      done
+  )
+  [ -n "$top" ] || exit 1
+  echo "$top"
+  exit 0
+fi
+
+# --file: the last Edit or Write. The line is where the first non-blank line of the new text
+# now sits, or 1 when it can't be found.
+pair=$(recent_tool_calls | jq -r 'select(.name | test("^(Edit|MultiEdit|Write|NotebookEdit)$"))
+  | (.input.file_path // .input.notebook_path),
+    ((.input.new_string // .input.edits[0].new_string // .input.content // "")
+      | split("\n") | map(select(test("\\S"))) | .[0] // "")' | tail -n 2)
+file=$(head -n 1 <<<"$pair") needle=$(tail -n 1 <<<"$pair")
+[ -f "$file" ] || exit 1
+line=1
+if [ -n "$needle" ]; then
+  n=$(grep -n -F -m 1 -- "$needle" "$file" | cut -d: -f1)
+  [ -n "$n" ] && line=$n
+fi
+echo "$file:$line"

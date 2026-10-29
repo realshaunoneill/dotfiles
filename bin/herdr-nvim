@@ -1,0 +1,13 @@
+#!/bin/bash
+# Open the focused herdr pane's project (see agent-where) in Neovim. Run from a herdr key as a
+# "pane" command: a zoomed pane over the agent that closes when Neovim quits, and prefix+z
+# unzooms it to see both side by side.
+
+PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/bin:/bin:$PATH"
+
+repo=$("$HOME/.zsh/bin/agent-where" --pane "${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}") || {
+  echo "No project found for this pane. Press any key to close."
+  read -r -n 1 -s
+  exit 1
+}
+cd "$repo" && exec nvim

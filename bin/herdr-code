@@ -1,0 +1,50 @@
+#!/bin/bash
+# Open the focused herdr pane's project in VS Code (see agent-where for which project).
+#   herdr-code          the project folder; VS Code focuses its window if it's already open
+#   herdr-code --edited the file the pane's Claude session last edited, at that line
+#   herdr-code FILE     FILE, inside its own repo's window (herdr-find-file uses this)
+# Bound in ~/.config/herdr/config.toml, where herdr sets HERDR_ACTIVE_PANE_ID. Problems are
+# reported as a herdr notification, since a key binding has nowhere else to print.
+
+PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/bin:/bin:$PATH"
+where="$HOME/.zsh/bin/agent-where"
+pane=${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}
+
+fail() {
+  "${HERDR_BIN_PATH:-herdr}" notification show "Open in VS Code" --body "$1" >/dev/null 2>&1 ||
+    echo "$1" >&2
+  exit 1
+}
+
+# VS Code's own CLI, wherever the app is. ~/Downloads only until it moves to /Applications.
+code=""
+for c in "$(command -v code)" \
+  "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" \
+  "$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" \
+  "$HOME/Downloads/Visual Studio Code.app/Contents/Resources/app/bin/code"; do
+  [ -n "$c" ] && [ -x "$c" ] && code=$c && break
+done
+[ -n "$code" ] || fail "VS Code's command-line tool wasn't found."
+
+run() {
+  if [ -n "${HERDR_CODE_DRY_RUN:-}" ]; then printf '%q ' "$code" "$@"; echo; else "$code" "$@"; fi
+}
+
+case "${1:-}" in
+  "")
+    [ -n "$pane" ] || fail "No herdr pane to look at."
+    repo=$("$where" --pane "$pane") || fail "No project found for this pane."
+    run "$repo"
+    ;;
+  --edited)
+    [ -n "$pane" ] || fail "No herdr pane to look at."
+    target=$("$where" --file --pane "$pane") || fail "This pane's Claude session hasn't edited a file yet."
+    repo=$(git -C "$(dirname "$target")" rev-parse --show-toplevel 2>/dev/null)
+    run ${repo:+"$repo"} -g "$target"
+    ;;
+  *)
+    file=$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")
+    repo=$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null)
+    run ${repo:+"$repo"} -g "$file"
+    ;;
+esac

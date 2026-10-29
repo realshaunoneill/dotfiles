@@ -124,6 +124,21 @@ The private key for personal hosts is held in the 1Password SSH agent rather tha
 and `opw` wrap the `op` CLI for the personal and work accounts, since a bare `op` fails when two
 accounts are signed in.
 
+# Code from herdr
+[herdr](https://herdr.dev) keys in `.config/herdr/config.toml` that act on the focused pane's project. That's the pane's own repo, or, for a Claude session started outside one (such as `~/Development`), the repo it last worked in. `bin/agent-where` works that out, and the Claude status line uses it too.
+
+| Key | Does |
+| --- | --- |
+| `ctrl+alt+e` | open the project in VS Code (`bin/herdr-code`) |
+| `ctrl+alt+o` | open the file Claude last edited, at that line, in VS Code |
+| `ctrl+alt+f` | popup: fuzzy-find a file with a preview; Enter opens it in VS Code, `ctrl-e` in Neovim (`bin/herdr-find-file`) |
+| `ctrl+alt+v` | the project in Neovim, in a zoomed pane over the agent; `prefix+z` shows both (`bin/herdr-nvim`) |
+| `ctrl+alt+g` | the branch's pull request in the browser (`bin/herdr-pr`) |
+
+Neovim runs [LazyVim](https://www.lazyvim.org): `.config/nvim` is its starter config, and `~/.config/nvim` links to the copy in `~/Personal/dotfiles` because Lazy writes `lazy-lock.json` there (commit it after `:Lazy update`). `<space>` opens LazyVim's key menu, `<space>e` the file tree, `<space><space>` file search, `<space>/` text search, `<space>gg` lazygit. Its icons need a Nerd Font: set iTerm's font to *SauceCodePro Nerd Font* (Profiles → Text).
+
+herdr 0.9.5 drops OSC 8 hyperlinks from what it draws, so links (like the status line's PR link) can't be clicked inside herdr; `ctrl+alt+g` stands in for that one.
+
 # iTerm2
 iTerm2 keeps its settings in `.config/iterm2/com.googlecode.iterm2.plist`: profile, colours, key bindings and the rest. To use them, open Settings → General → Settings, tick **Load settings from a custom folder or URL**, choose `~/Personal/dotfiles/.config/iterm2`, and set **Save changes** to **Automatically**. That folder is the clone you commit from. iTerm writes to it, and in `~/.zsh` its saves would leave uncommitted changes that can block `zupdate` and the automatic update.
 
@@ -132,7 +147,7 @@ iTerm reads the folder each time it starts, so there's nothing to load by hand. 
 # Checks
 `.github/workflows/checks.yml` runs on every push: a `zsh -n` syntax check on the zsh files, `shellcheck` on the bash scripts, and `gitleaks` over the full history. Run the same locally once `brew bundle` has installed shellcheck and gitleaks:
 ```sh
-shellcheck --severity=warning install.sh bin/*.sh claude/*.sh claude/hooks/*.sh
+shellcheck --severity=warning install.sh $(git ls-files bin claude/statusline.sh claude/hooks)
 gitleaks git --redact .
 ```
 
