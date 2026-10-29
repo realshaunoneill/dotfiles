@@ -98,7 +98,11 @@ claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripp
 [ui.toast]
 # A macOS notification when an agent in another workspace is blocked or done. This is
 # also how the work and personal sessions reach you while you're in the other one.
-delivery = "system"
+# "terminal" hands it to iTerm, which posts it as iTerm2, so clicking it brings iTerm
+# forward. "system" posted it with osascript's `display notification`, which macOS credits
+# to Script Editor, so a click opened Script Editor (2026-10-29). The catch: iTerm can only
+# post for a session that has an iTerm tab attached (hw / hp); a detached one is silent.
+delivery = "terminal"
 
 # [experimental] pane_history stays off (the default). It would write recent pane
 # output, tokens included, to session-history.json on this Mac.
