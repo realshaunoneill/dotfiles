@@ -89,11 +89,18 @@ window_title = ""
 # (~/.claude/hooks/herdr-workspace-title.sh). Until then it shows its folder's name.
 prompt_new_workspace_name = false
 
-# Each Claude row in the sidebar: its workspace, then its terminal title. Claude puts the
-# session's --name there (from clw); herdr strips the spinner glyph in front. The
-# default last line, the agent's name, is dropped because it only ever says "claude".
+# Each Claude row in the sidebar: the session's own name, then where it is (workspace · tab)
+# dimmed. The name is the terminal title, where Claude puts the session's --name (from clw)
+# or its generated title; herdr strips the spinner glyph in front. Until 2026-10-29 the
+# workspace came first, so two agents in one workspace read alike ("Receipt Wise · 1",
+# "Receipt Wise · ipad") with their names dimmed underneath. herdr's default last line, the
+# agent kind, is dropped because it only ever says "claude". "machine" only shows for agents
+# on other machines, which this setup has none of.
 [ui.sidebar.agents.rows_by_agent]
-claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"]]
+claude = [
+  ["state_icon", { token = "terminal_title_stripped", bold = true }],
+  [{ token = "workspace", dim = true }, { token = "tab", dim = true }],
+]
 
 [ui.toast]
 # A macOS notification when an agent in another workspace is blocked or done. This is
