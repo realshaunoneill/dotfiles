@@ -39,17 +39,19 @@ if [ -n "$pane" ]; then
 fi
 [ -n "$transcript" ] && [ -r "$transcript" ] || exit 1
 
-# The session's recent tool calls, oldest first, one {name, input} object per line. The first
-# line is dropped because tail -c usually cuts it in half.
-recent_tool_calls() {
-  tail -c 400000 "$transcript" | tail -n +2 |
-    jq -c 'select(.type == "assistant") | .message.content[]? | select(.type == "tool_use")
-      | {name, input}' 2>/dev/null
+# Tool calls as {name, input} objects, oldest first, from the transcript lines that match $1.
+# The transcript is compact JSON lines, megabytes long once tool output piles up, so grep picks
+# the lines and jq parses only those. fromjson? skips a line that tail -c cut in half.
+tool_calls() {
+  LC_ALL=C grep -E "$1" | tail -n 40 |
+    jq -cR 'fromjson? | select(.type == "assistant") | .message.content[]?
+      | select(.type == "tool_use") | {name, input}' 2>/dev/null
 }
 
 if [ "$mode" = repo ]; then
   top=$(
-    recent_tool_calls | jq -r '.input | (.file_path // .notebook_path // .path // .command // empty)' |
+    tail -c 2000000 "$transcript" | tool_calls '"type":"tool_use"' |
+      jq -r '.input | (.file_path // .notebook_path // .path // .command // empty)' |
       grep -oE "(~|$HOME)/[^[:space:]\"'\`;|&()<>]+" | sed "s|^~|$HOME|" |
       tail -r | awk '!seen[$0]++' | head -n 15 |
       while IFS= read -r p; do
@@ -62,9 +64,10 @@ if [ "$mode" = repo ]; then
   exit 0
 fi
 
-# --file: the last Edit or Write. The line is where the first non-blank line of the new text
-# now sits, or 1 when it can't be found.
-pair=$(recent_tool_calls | jq -r 'select(.name | test("^(Edit|MultiEdit|Write|NotebookEdit)$"))
+# --file: the last Edit or Write anywhere in the session. The line is where the first
+# non-blank line of the new text now sits, or 1 when it can't be found.
+pair=$(tool_calls '"name":"(Edit|MultiEdit|Write|NotebookEdit)"' <"$transcript" |
+  jq -r 'select(.name | test("^(Edit|MultiEdit|Write|NotebookEdit)$"))
   | (.input.file_path // .input.notebook_path),
     ((.input.new_string // .input.edits[0].new_string // .input.content // "")
       | split("\n") | map(select(test("\\S"))) | .[0] // "")' | tail -n 2)
