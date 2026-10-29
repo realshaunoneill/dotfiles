@@ -1,6 +1,12 @@
 # herdr configuration. Every option with its default: `herdr --default-config`.
 # Validate with `herdr config check`; apply to a running session with
 # `herdr server reload-config`.
+#
+# ~/.config/herdr/config.toml is a symlink to this file in the ~/.zsh clone, so a change
+# goes live with `git -C ~/.zsh pull` and a reload. Made by hand on a new machine:
+#   ln -s ~/.zsh/.config/herdr/config.toml ~/.config/herdr/config.toml
+# herdr writes through the link rather than replacing it (`herdr config reset-keys`,
+# tested 2026-10-29).
 onboarding = false
 
 [keys]
@@ -17,9 +23,13 @@ focus_pane_right = ["prefix+l", "ctrl+alt+l"]
 split_vertical = ["prefix+v", "ctrl+alt+d"]
 zoom = ["prefix+z", "ctrl+alt+z"]
 
-# Unbound by default; prefix then up/down (navigate mode) does the same.
+# All unbound by default. prefix then up/down (navigate mode) also moves between
+# workspaces, and prefix+o jumps to whichever agent last raised a notification.
 previous_workspace = "ctrl+alt+up"
 next_workspace = "ctrl+alt+down"
+switch_workspace = "ctrl+alt+1..9"
+previous_agent = "ctrl+alt+p"
+next_agent = "ctrl+alt+n"
 
 [ui]
 # Leave the iTerm tab title alone, so the "Development" / "Personal" that hw / hp set
@@ -27,6 +37,10 @@ next_workspace = "ctrl+alt+down"
 # herdr can't write it itself. Until 2026-10-29 it was "{terminal_title}", Claude's
 # task title; the default is "{hostname}: {workspace}".
 window_title = ""
+
+# The agent list as an attention queue, blocked agents first, rather than grouped by
+# workspace.
+agent_panel_sort = "priority"
 
 # Don't ask for a workspace name. The first Claude session in the workspace names it:
 # the clw name at the first prompt, or Claude's own title after its first reply
