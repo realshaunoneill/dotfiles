@@ -18,6 +18,10 @@ split_vertical = ["prefix+v", "ctrl+alt+d"]
 zoom = ["prefix+z", "ctrl+alt+z"]
 
 [ui]
+# The iTerm tab/window title: the focused pane's own title, so Claude's task title shows
+# through (spinner stripped). The default was "{hostname}: {workspace}".
+window_title = "{terminal_title}"
+
 # Don't ask for a workspace name. The first Claude session in the workspace names it:
 # the clw name at the first prompt, or Claude's own title after its first reply
 # (~/.claude/hooks/herdr-workspace-title.sh). Until then it shows its folder's name.
