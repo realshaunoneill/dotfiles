@@ -80,6 +80,9 @@ Helpers for Anthropic's [Claude Code](https://docs.claude.com/en/docs/claude-cod
 - `yolo` – explicit `claude --dangerously-skip-permissions`
 - `clupdate` – update the CLI
 - `clcommit` – draft a commit message from the staged diff with Claude, then open it in your editor
+- `clw <name> [dir]` – a named session, optionally in another directory. Other sessions message it by that name.
+- `clwt <branch> [name]` – a git worktree for an existing branch under `.claude/worktrees/`, with a named session in it. Inside herdr it opens in a workspace of its own.
+- `clgpt [model]` – a session on one of the GPT models the llmproxy serves (default `claude-code-gpt-6-sol`); `clmodels` lists them. How these behave in herdr, and the gaps, is noted at the end of `.config/herdr/config.toml`.
 
 Portable slash commands (`/commit`, `/pr`, `/explain`), a `pr-reviewer` subagent and hook scripts are tracked under `claude/`. Symlink them into `~/.claude` with:
 ```sh
@@ -88,7 +91,7 @@ claude-setup    # alias for zSetupClaude
 This backs up any existing `~/.claude/commands`, `~/.claude/agents` or same-named hook before linking. Hooks are linked one file at a time, because herdr installs its own hook script into `~/.claude/hooks`. Machine-specific Claude config (e.g. `~/.claude/settings.json`, which says which hooks run) is intentionally **not** tracked here.
 
 - `claude/hooks/herdr-workspace-title.sh` names a [herdr](https://herdr.dev) workspace after the Claude session in it. It runs on `UserPromptSubmit` and `Stop`.
-- `claude/statusline.sh` is the status line under each Claude session: model and effort, context used, repo and branch (`wt` in a linked worktree), the branch's open PR as a link, minutes left on the prompt cache, and estimated cost. A session started outside a repo, such as `~/Development`, shows the repo it last worked in (found in its transcript), and gets that branch's PR from `gh pr view`, cached for five minutes. It still hands the session data to Orca's status line hook. Turn it on in `~/.claude/settings.json`:
+- `claude/statusline.sh` is the status line under each Claude session: model and effort, context used, repo and branch (`wt` in a linked worktree), the branch's open PR as a link (not clickable inside herdr, where `ctrl+alt+g` opens it instead), minutes left on the prompt cache, and estimated cost. A session started outside a repo, such as `~/Development`, shows the repo it last worked in (found in its transcript), and gets that branch's PR from `gh pr view`, cached for five minutes. It still hands the session data to Orca's status line hook. Turn it on in `~/.claude/settings.json`:
   ```json
   "statusLine": { "type": "command", "command": "bash ~/.claude/statusline.sh", "refreshInterval": 30 }
   ```
@@ -124,8 +127,16 @@ The private key for personal hosts is held in the 1Password SSH agent rather tha
 and `opw` wrap the `op` CLI for the personal and work accounts, since a bare `op` fails when two
 accounts are signed in.
 
-# Code from herdr
-[herdr](https://herdr.dev) keys in `.config/herdr/config.toml` that act on the focused pane's project. That's the pane's own repo, or, for a Claude session started outside one (such as `~/Development`), the repo it last worked in. `bin/agent-where` works that out, and the Claude status line uses it too.
+# herdr
+[herdr](https://herdr.dev) is the terminal multiplexer the Claude sessions run in. Its config is `.config/herdr/config.toml`, which `~/.config/herdr/config.toml` links to; a change goes live with `zupdate` and `herdr server reload-config`. That file's comments give the reason for each setting.
+- `hw` / `hp` – open the `work` and `personal` herdr sessions. Each titles its iTerm tab "Development" or "Personal", and either can be put away with `herdr session stop` without touching the other.
+- The prefix key is `ctrl+space` (not herdr's default `ctrl+b`, which Claude Code uses); `prefix+?` lists every binding.
+- `ctrl+alt+↑/↓` – previous / next workspace; `ctrl+alt+1..9` – jump to one. `ctrl+alt+n/p` – next / previous agent.
+- A new workspace is named after the first Claude session in it, by `claude/hooks/herdr-workspace-title.sh`.
+- herdr draws no clickable links (OSC 8 hyperlinks are dropped), so the keys below stand in where a link would.
+
+### Code from herdr
+Keys that act on the focused pane's project. That's the pane's own repo, or, for a Claude session started outside one (such as `~/Development`), the repo it last worked in. `bin/agent-where` works that out, and the Claude status line uses it too.
 
 | Key | Does |
 | --- | --- |
@@ -136,8 +147,6 @@ accounts are signed in.
 | `ctrl+alt+g` | the branch's pull request in the browser (`bin/herdr-pr`) |
 
 Neovim runs [LazyVim](https://www.lazyvim.org): `.config/nvim` is its starter config, and `~/.config/nvim` links to the copy in `~/Personal/dotfiles` because Lazy writes `lazy-lock.json` there (commit it after `:Lazy update`). `<space>` opens LazyVim's key menu, `<space>e` the file tree, `<space><space>` file search, `<space>/` text search, `<space>gg` lazygit. Its icons need a Nerd Font: set iTerm's font to *SauceCodePro Nerd Font* (Profiles → Text).
-
-herdr 0.9.5 drops OSC 8 hyperlinks from what it draws, so links (like the status line's PR link) can't be clicked inside herdr; `ctrl+alt+g` stands in for that one.
 
 # iTerm2
 iTerm2 keeps its settings in `.config/iterm2/com.googlecode.iterm2.plist`: profile, colours, key bindings and the rest. To use them, open Settings → General → Settings, tick **Load settings from a custom folder or URL**, choose `~/Personal/dotfiles/.config/iterm2`, and set **Save changes** to **Automatically**. That folder is the clone you commit from. iTerm writes to it, and in `~/.zsh` its saves would leave uncommitted changes that can block `zupdate` and the automatic update.

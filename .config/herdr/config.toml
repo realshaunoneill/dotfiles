@@ -6,7 +6,8 @@
 # goes live with `git -C ~/.zsh pull` and a reload. zResetLocalConfig (alias/functions.sh)
 # makes the link on a new machine.
 # herdr writes through the link rather than replacing it (`herdr config reset-keys`,
-# tested 2026-10-29).
+# tested 2026-10-29). README.md's herdr section is the overview of these keys and scripts;
+# the reasons for each setting are here.
 onboarding = false
 
 [keys]
@@ -25,6 +26,9 @@ zoom = ["prefix+z", "ctrl+alt+z"]
 
 # All unbound by default. prefix then up/down (navigate mode) also moves between
 # workspaces, and prefix+o jumps to whichever agent last raised a notification.
+# ⌘⌥↑/↓ can't be bound here: iTerm keeps ⌘ chords for itself. An iTerm key binding that
+# sends the escape sequence [1;7A / [1;7B, which is what ctrl+alt+up/down send, makes them
+# work too (Settings → Keys → Key Bindings). Not set up yet as of 2026-10-29.
 previous_workspace = "ctrl+alt+up"
 next_workspace = "ctrl+alt+down"
 switch_workspace = "ctrl+alt+1..9"
@@ -59,6 +63,10 @@ type = "pane"
 command = "$HOME/.zsh/bin/herdr-nvim"
 description = "project in Neovim"
 
+# A key rather than a click on the Claude status line's PR link: herdr 0.9.5 drops OSC 8
+# hyperlinks from what it draws, so no link can be clicked inside herdr. Tested 2026-10-29 by
+# recording a throwaway session's output: the text came through, the link didn't. Setting
+# FORCE_HYPERLINK for Claude would not help for the same reason.
 [[keys.command]]
 key = "ctrl+alt+g"
 type = "shell"
@@ -100,7 +108,8 @@ delivery = "system"
 # session as Claude: state, notifications, the sidebar rows above and the workspace
 # name. Worked out from the setup on 2026-10-29, not yet tried live. Known gaps, none
 # fixed:
-# - A GPT row looks the same as a Claude one. Name the session, model first, because
+# - A GPT row in the sidebar looks the same as a Claude one; only the session's own status
+#   line (claude/statusline.sh) shows the model. Name the session, model first, because
 #   clgpt reads its first argument as the model: `clgpt claude-code-gpt-6-sol --name x`.
 # - clwt always starts Claude; it has no GPT option.
 # - After a herdr server restart a GPT session comes back on Claude. herdr keeps only
