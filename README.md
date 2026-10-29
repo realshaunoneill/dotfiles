@@ -88,6 +88,11 @@ claude-setup    # alias for zSetupClaude
 This backs up any existing `~/.claude/commands`, `~/.claude/agents` or same-named hook before linking. Hooks are linked one file at a time, because herdr installs its own hook script into `~/.claude/hooks`. Machine-specific Claude config (e.g. `~/.claude/settings.json`, which says which hooks run) is intentionally **not** tracked here.
 
 - `claude/hooks/herdr-workspace-title.sh` names a [herdr](https://herdr.dev) workspace after the Claude session in it. It runs on `UserPromptSubmit` and `Stop`.
+- `claude/statusline.sh` is the status line under each Claude session: model and effort, context used, repo and branch (`wt` in a linked worktree), the branch's PR, minutes left on the prompt cache, and estimated cost. It still hands the session data to Orca's status line hook. Turn it on in `~/.claude/settings.json`:
+  ```json
+  "statusLine": { "type": "command", "command": "bash ~/.claude/statusline.sh", "refreshInterval": 30 }
+  ```
+  `refreshInterval` keeps the cache countdown moving while a session sits idle.
 
 # SSH
 `~/.ssh/config` is kept thin — three lines of `Include` — with every host block in a numbered fragment under `~/.ssh/config.d/`. The number **is** the precedence order, because OpenSSH keeps the *first* value it obtains for each keyword. Install or refresh it with:
@@ -120,14 +125,14 @@ and `opw` wrap the `op` CLI for the personal and work accounts, since a bare `op
 accounts are signed in.
 
 # iTerm2
-iTerm2 keeps its settings in `.config/iterm2/com.googlecode.iterm2.plist`: profile, colours, key bindings and the rest. To use them, open Settings → General → Settings, tick **Load settings from a custom folder or URL**, choose `~/Personal/dotfiles/.config/iterm2`, and set **Save changes** to **Manually**. That folder is the clone you commit from. iTerm writes to it, and in `~/.zsh` its saves would leave uncommitted changes that can block `zupdate` and the automatic update.
+iTerm2 keeps its settings in `.config/iterm2/com.googlecode.iterm2.plist`: profile, colours, key bindings and the rest. To use them, open Settings → General → Settings, tick **Load settings from a custom folder or URL**, choose `~/Personal/dotfiles/.config/iterm2`, and set **Save changes** to **Automatically**. That folder is the clone you commit from. iTerm writes to it, and in `~/.zsh` its saves would leave uncommitted changes that can block `zupdate` and the automatic update.
 
-After changing a setting, click **Save Now**, review the diff (the repo is public) and commit. iTerm also saves window positions, so a diff may include those.
+iTerm reads the folder each time it starts, so there's nothing to load by hand. With **Automatically**, each settings change is written to the file straight away. It then shows up as an uncommitted change: review the diff (the repo is public) and commit when you like. iTerm also saves window positions, so a diff may include those. **Manually** writes only when you click **Save Now** or accept iTerm's offer to save on quit; anything else is replaced by the folder's copy at the next launch.
 
 # Checks
 `.github/workflows/checks.yml` runs on every push: a `zsh -n` syntax check on the zsh files, `shellcheck` on the bash scripts, and `gitleaks` over the full history. Run the same locally once `brew bundle` has installed shellcheck and gitleaks:
 ```sh
-shellcheck --severity=warning install.sh bin/*.sh claude/hooks/*.sh
+shellcheck --severity=warning install.sh bin/*.sh claude/*.sh claude/hooks/*.sh
 gitleaks git --redact .
 ```
 

@@ -67,8 +67,8 @@ function zReinstall () {
   curl -s https://raw.githubusercontent.com/realshaunoneill/dotfiles/master/install.sh | bash
 }
 
-# Symlink the tracked Claude Code commands, agents and hooks into ~/.claude so custom
-# slash commands, subagents and hook scripts are available on this machine. Run manually
+# Symlink the tracked Claude Code commands, agents, hooks and status line into ~/.claude so
+# custom slash commands, subagents and scripts are available on this machine. Run manually
 # (also aliased to `claude-setup`); not run on shell startup.
 #
 # Hooks are linked file by file, not as a folder: herdr's integration installs its own
@@ -94,6 +94,9 @@ function zSetupClaude () {
   for hook in "$ZDOTDIR"/claude/hooks/*(N); do
     _zClaudeLink "$hook" "$claude_dir/hooks/${hook:t}" "$stamp"
   done
+
+  [ -f "$ZDOTDIR/claude/statusline.sh" ] &&
+    _zClaudeLink "$ZDOTDIR/claude/statusline.sh" "$claude_dir/statusline.sh" "$stamp"
 
   echo "Claude Code setup complete"
 }
