@@ -137,9 +137,12 @@ if command -v claude &>/dev/null; then
   # and one for personal, so either can be put away with `herdr session stop work`
   # without touching the other. Both read the same ~/.config/herdr/config.toml. Plain
   # `herdr` opens a third session, "default".
+  #
+  # Each titles its iTerm tab after its tree. herdr leaves that title alone because
+  # window_title is "" in config.toml.
   if command -v herdr &>/dev/null; then
-    alias hw='herdr --session work'
-    alias hp='herdr --session personal'
+    function hw() { printf '\e]0;%s\a' Development; herdr --session work "$@"; }
+    function hp() { printf '\e]0;%s\a' Personal; herdr --session personal "$@"; }
   fi
 
   # Run a session on one of the GPT models the llmproxy also serves.

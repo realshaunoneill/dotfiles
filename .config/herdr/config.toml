@@ -17,10 +17,16 @@ focus_pane_right = ["prefix+l", "ctrl+alt+l"]
 split_vertical = ["prefix+v", "ctrl+alt+d"]
 zoom = ["prefix+z", "ctrl+alt+z"]
 
+# Unbound by default; prefix then up/down (navigate mode) does the same.
+previous_workspace = "ctrl+alt+up"
+next_workspace = "ctrl+alt+down"
+
 [ui]
-# The iTerm tab/window title: the focused pane's own title, so Claude's task title shows
-# through (spinner stripped). The default was "{hostname}: {workspace}".
-window_title = "{terminal_title}"
+# Leave the iTerm tab title alone, so the "Development" / "Personal" that hw / hp set
+# stays. This file is shared by both sessions and the title has no session token, so
+# herdr can't write it itself. Until 2026-10-29 it was "{terminal_title}", Claude's
+# task title; the default is "{hostname}: {workspace}".
+window_title = ""
 
 # Don't ask for a workspace name. The first Claude session in the workspace names it:
 # the clw name at the first prompt, or Claude's own title after its first reply
