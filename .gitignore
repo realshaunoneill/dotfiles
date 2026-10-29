@@ -5,3 +5,4 @@
 .zshupdate
 custom/
 .zsh_sessions/
+.DS_Store

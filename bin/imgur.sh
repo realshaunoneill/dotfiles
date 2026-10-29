@@ -32,9 +32,9 @@ function upload {
 }
 
 # Check arguments
-if [ "$1" == "-h" -o "$1" == "--help" ]; then
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
 	usage
-	return 0
+	exit 0
 elif [ $# -eq 0 ]; then
 	echo "No file specified; reading from stdin" >&2
 	exec "$0" -
@@ -43,7 +43,7 @@ fi
 # Check curl is available
 type curl &>/dev/null || {
 	echo "Couldn't find curl, which is required." >&2
-	return 17
+	exit 17
 }
 
 clip=""
@@ -61,7 +61,7 @@ while [ $# -gt 0 ]; do
 	else
 		# File -> imgur
 		# Check file exists
-		if [ "$file" != "-" -a ! -f "$file" ]; then
+		if [ "$file" != "-" ] && [ ! -f "$file" ]; then
 			echo "File '$file' doesn't exist; skipping" >&2
 			errors=true
 			continue
@@ -112,5 +112,5 @@ else
 fi
 
 if $errors; then
-	return 1
+	exit 1
 fi

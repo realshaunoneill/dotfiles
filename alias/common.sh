@@ -17,13 +17,18 @@ alias cp='cp -iv'
 alias mv='mv -iv'
 alias mkdir='mkdir -pv'
 
-# Safe rm - skips confirmation when -f flag is used
+# Safe rm - skips confirmation when -f flag is used. Only option words count: matching
+# "-f" anywhere in "$*" also matched filenames like notes-final.md.
 rm() {
-  if [[ "$*" == *-f* ]] || [[ "$*" == *-rf* ]]; then
-    command rm "$@"
-  else
-    command rm -iv "$@"
-  fi
+  local arg
+  for arg in "$@"; do
+    [[ "$arg" == -- ]] && break
+    if [[ "$arg" == --force || ( "$arg" == -[^-]* && "$arg" == *f* ) ]]; then
+      command rm "$@"
+      return
+    fi
+  done
+  command rm -iv "$@"
 }
 
 # Resume wget
