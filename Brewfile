@@ -1,23 +1,31 @@
 # Brewfile - install with: brew bundle --file=Brewfile
-# Captures the CLI tools these dotfiles assume or benefit from.
+# The CLI tools these dotfiles assume or benefit from, on any Mac. Brewfile.work has the
+# rest of the Rapid7 laptop.
+#
+# Not here, because they arrive another way: zsh, git, vim and jq ship with macOS;
+# powerlevel10k is cloned into custom/ by .zshrc; nvm uses its own installer (~/.nvm, see
+# appConfigs/nvm.zsh); herdr installs itself into ~/.local/bin. neofetch was dropped
+# (2026-10-29) because Homebrew no longer has it, which made `brew bundle` fail.
 
-# Shell & prompt
-brew "zsh"
-brew "powerlevel10k"
-
-# Core tools referenced by configs/aliases
-brew "git"
-brew "tmux"
-brew "vim"
+# Shell
 brew "eza"          # modern ls replacement (see common.sh)
+brew "fzf"          # ctrl-r history and ctrl-t file search (.zshrc)
+brew "zoxide"       # `z` jumps to frecent directories (.zshrc)
+
+# Git
+brew "gh"           # GitHub CLI; also git's credential helper for github.com
+brew "git-delta"    # pager for git diff/log/show (git/config)
+brew "gnupg"        # commit signing
 
 # Quality-of-life CLI tools used by functions/aliases
-brew "fzf"          # fuzzy finder
 brew "ripgrep"      # fast grep (rg)
 brew "fd"           # fast find (note: shell fn is `fdir` to avoid shadowing)
-brew "jq"           # JSON processor
+brew "tmux"         # tn/ta/tl/tk aliases, homeConfigs/tmux
 brew "wget"
-brew "neofetch"     # system info (.config/neofetch)
 
-# Node version manager (lazy-loaded in .zshrc)
-brew "nvm"
+# Checks the dotfiles CI runs (.github/workflows/checks.yml), for running them locally
+brew "shellcheck"
+brew "gitleaks"
+
+cask "1password-cli"       # op, and the SSH agent ssh/config.d/90-1password.conf uses
+cask "claude-code@latest"  # alias/claude.sh

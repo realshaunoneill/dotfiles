@@ -1,0 +1,44 @@
+# Brewfile.work - install with: brew bundle --file=Brewfile.work
+# The rest of the Rapid7 laptop, beyond the core Brewfile: what `brew bundle dump` listed
+# on 2026-10-29. Internal Rapid7 packages and the npm/uv globals are left out; the npm
+# ones belong to whichever node nvm has active.
+
+tap "derailed/k9s"
+tap "snyk/tap"
+tap "stripe/stripe-cli"
+
+# Cloud, Kubernetes and security
+brew "awscli"
+brew "derailed/k9s/k9s"
+brew "snyk/tap/snyk"
+cask "openlens"
+
+# Languages and build tools
+brew "cocoapods"
+brew "jenv"
+brew "maven"
+brew "pipx"
+brew "pyenv"
+brew "python@3.14"
+brew "uv"
+cask "zulu@17"
+cask "zulu@21"
+
+# Media, PDF and image tools
+brew "ffmpeg"
+brew "librsvg"
+brew "pngquant"
+brew "poppler"
+brew "qpdf"
+
+# Everything else
+brew "acpica"
+brew "git-filter-repo"
+brew "md5sha1sum"
+brew "redis"
+brew "stripe/stripe-cli/stripe"
+cask "mac-mouse-fix"
+cask "raycast"
+cask "warp"
+cask "wispr-flow"
+cask "yubico-authenticator"

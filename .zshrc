@@ -80,6 +80,10 @@ ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 # Load oh-my-zsh
 source $ZSH/oh-my-zsh.sh
 
+# fzf: ctrl-r searches history, ctrl-t inserts a file path, `**<tab>` completes paths.
+# Its alt-c needs iTerm's Option key set to Esc+, which this Mac doesn't use.
+command -v fzf &>/dev/null && source <(fzf --zsh)
+
 # Environment settings
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
@@ -191,6 +195,10 @@ fi
     cp "$ZDOTDIR/homeConfigs/tmux/.tmux.conf" "$HOME/.tmux.conf"
   fi
 } &!
+
+# zoxide: `z <part of a path>` jumps to the best match among directories you've visited,
+# `zi` picks one with fzf. Last, as zoxide asks, so its cd hook sees every directory.
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
 
 # Print startup profile when ZSH_PROFILE is set (see top of file)
 [[ -n "$ZSH_PROFILE" ]] && zprof

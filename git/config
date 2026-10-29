@@ -1,0 +1,13 @@
+# Shared git settings. The machine's own ~/.gitconfig includes this file and keeps the
+# identity, signing key and credential helpers, so none of those land in this public repo:
+#   git config --global --add include.path '~/.zsh/git/config'
+
+# delta pages git diff, show, log -p and blame with syntax highlighting. n / N jump between
+# files. For two columns: DELTA_FEATURES=+side-by-side git diff. Git only pages to a
+# terminal, so scripts and agents reading git output still get plain text.
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
