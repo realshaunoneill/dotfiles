@@ -30,6 +30,13 @@ zsh
 ```
 And thats it! You should now have a fully functional zsh shell. You can read below to learn more about the features and customizations that are included in this repository.
 
+### Homebrew packages
+On a Mac, install the CLI tools these dotfiles use with:
+```sh
+brew bundle --file=$ZDOTDIR/Brewfile
+```
+`Brewfile.work` lists the rest of the work laptop, for setting up a replacement.
+
 # Plugins
 The following Oh My Zsh plugins are enabled by default:
 - `git` – aliases and prompt info for git
@@ -40,6 +47,13 @@ The following Oh My Zsh plugins are enabled by default:
 # Customization
 There are a few customizations that I have made to my shell.
 - [Eza](https://eza.rocks/) is used as a richer `ls` when it's installed. On first launch you'll be prompted to install/set it up (via `zSetupEza`); it's optional, and the standard `ls` is used otherwise.
+- [fzf](https://github.com/junegunn/fzf), when installed: `Ctrl-R` fuzzy-searches history, `Ctrl-T` inserts a file path, and `**<Tab>` completes paths.
+- [zoxide](https://github.com/ajeetdsouza/zoxide), when installed: `z <part of a path>` jumps to the best match among directories you've visited, and `zi` picks one with fzf.
+- [delta](https://github.com/dandavison/delta) pages `git diff`, `show`, `log -p` and `blame` with syntax highlighting. Its settings live in `git/config`, which your own `~/.gitconfig` includes, so your identity and signing key stay out of this repo:
+  ```sh
+  git config --global --add include.path '~/.zsh/git/config'
+  ```
+  For two columns, run `DELTA_FEATURES=+side-by-side git diff`.
 
 # Functions
 A number of helper functions are defined in `alias/functions.sh`. Some of the handy ones:
@@ -67,11 +81,13 @@ Helpers for Anthropic's [Claude Code](https://docs.claude.com/en/docs/claude-cod
 - `clupdate` – update the CLI
 - `clcommit` – draft a commit message from the staged diff with Claude, then open it in your editor
 
-Portable slash commands (`/commit`, `/pr`, `/explain`) and a `pr-reviewer` subagent are tracked under `claude/`. Symlink them into `~/.claude` with:
+Portable slash commands (`/commit`, `/pr`, `/explain`), a `pr-reviewer` subagent and hook scripts are tracked under `claude/`. Symlink them into `~/.claude` with:
 ```sh
 claude-setup    # alias for zSetupClaude
 ```
-This backs up any existing `~/.claude/commands` or `~/.claude/agents` before linking. Machine-specific Claude config (e.g. `~/.claude/settings.json`) is intentionally **not** tracked here.
+This backs up any existing `~/.claude/commands`, `~/.claude/agents` or same-named hook before linking. Hooks are linked one file at a time, because herdr installs its own hook script into `~/.claude/hooks`. Machine-specific Claude config (e.g. `~/.claude/settings.json`, which says which hooks run) is intentionally **not** tracked here.
+
+- `claude/hooks/herdr-workspace-title.sh` names a [herdr](https://herdr.dev) workspace after the Claude session in it. It runs on `UserPromptSubmit` and `Stop`.
 
 # SSH
 `~/.ssh/config` is kept thin — three lines of `Include` — with every host block in a numbered fragment under `~/.ssh/config.d/`. The number **is** the precedence order, because OpenSSH keeps the *first* value it obtains for each keyword. Install or refresh it with:
@@ -102,6 +118,18 @@ value replaces OpenSSH's built-in default identity list for every host that reac
 The private key for personal hosts is held in the 1Password SSH agent rather than on disk; `opp`
 and `opw` wrap the `op` CLI for the personal and work accounts, since a bare `op` fails when two
 accounts are signed in.
+
+# iTerm2
+iTerm2 keeps its settings in `.config/iterm2/com.googlecode.iterm2.plist`: profile, colours, key bindings and the rest. To use them, open Settings → General → Settings, tick **Load settings from a custom folder or URL**, choose `~/Personal/dotfiles/.config/iterm2`, and set **Save changes** to **Manually**. That folder is the clone you commit from. iTerm writes to it, and in `~/.zsh` its saves would leave uncommitted changes that can block `zupdate` and the automatic update.
+
+After changing a setting, click **Save Now**, review the diff (the repo is public) and commit. iTerm also saves window positions, so a diff may include those.
+
+# Checks
+`.github/workflows/checks.yml` runs on every push: a `zsh -n` syntax check on the zsh files, `shellcheck` on the bash scripts, and `gitleaks` over the full history. Run the same locally once `brew bundle` has installed shellcheck and gitleaks:
+```sh
+shellcheck --severity=warning install.sh bin/*.sh claude/hooks/*.sh
+gitleaks git --redact .
+```
 
 # Profiling startup
 To see where shell startup time is spent:

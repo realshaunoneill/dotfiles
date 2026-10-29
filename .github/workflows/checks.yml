@@ -1,0 +1,38 @@
+# Runs on every push to this public repo. Locally: `brew bundle --file=Brewfile` installs
+# shellcheck and gitleaks, then run the same commands from the repo root.
+name: checks
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Most of this repo is zsh, which shellcheck can't parse, so zsh files get a syntax
+      # check and only the bash scripts go through shellcheck.
+      - name: zsh syntax
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq zsh >/dev/null
+          for f in .zshrc .zshenv .zshsetup .zshupgrade alias/*.sh appConfigs/*.zsh; do
+            zsh -n "$f" || { echo "::error file=$f::zsh syntax error"; exit 1; }
+          done
+
+      - name: shellcheck
+        run: shellcheck --severity=warning install.sh bin/*.sh claude/hooks/*.sh
+
+  secrets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
