@@ -96,6 +96,13 @@ window_title = ""
 # look of herdr.dev's own screenshots, instead of the default cyan.
 accent = "#cba6f7"
 
+# Room for a whole Claude session title in the agent list, which herdr cuts off with "…"
+# rather than wrapping. herdr's default is 26 columns, growing to 36 for long workspace
+# names. On 2026-10-30 the twelve open sessions' titles ran from 11 to 40 characters, and
+# a row adds about four for the status dot and padding. prefix+b hides the sidebar.
+sidebar_width = 44
+sidebar_max_width = 48
+
 # agent_panel_sort stays "spaces". "priority" (blocked agents first) was tried on
 # 2026-10-29, but then the agent list no longer matched the workspace order that
 # ctrl+alt+up/down stepped through at the time.
@@ -105,10 +112,9 @@ accent = "#cba6f7"
 # (~/.claude/hooks/herdr-workspace-title.sh). Until then it shows its folder's name.
 prompt_new_workspace_name = false
 
-# A blank line between sidebar entries, as in herdr.dev's screenshots.
-[ui.sidebar.spaces]
-row_gap = 1
-
+# A blank line between agent entries, as in herdr.dev's screenshots, since each is two lines.
+# Not between spaces: they're one line here (~/Development has no branch to show), so a gap
+# only spread them out (tried 2026-10-30).
 [ui.sidebar.agents]
 row_gap = 1
 
