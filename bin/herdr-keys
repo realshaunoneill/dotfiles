@@ -1,0 +1,8 @@
+#!/bin/bash
+# herdr popup: the cheat sheet of keys herdr's own help panel (prefix+?) can't list, from
+# .config/herdr/cheatsheet.md. q closes it. less without -F, so the popup stays open even when
+# the sheet fits on one screen.
+
+PATH="/opt/homebrew/bin:/usr/bin:/bin:$PATH"
+exec bat --paging=always --pager="less -R" --style=plain --color=always --language=markdown \
+  -- "$HOME/.zsh/.config/herdr/cheatsheet.md"

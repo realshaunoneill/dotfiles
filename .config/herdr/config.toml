@@ -67,6 +67,17 @@ type = "pane"
 command = "$HOME/.zsh/bin/herdr-nvim"
 description = "project in Neovim"
 
+# herdr's help panel (prefix+?) lists only herdr bindings, these commands included. The rest
+# (shell, Neovim, lazygit, iTerm) are in .config/herdr/cheatsheet.md, shown by prefix+i; keep
+# it in step when a key changes.
+[[keys.command]]
+key = "prefix+i"
+type = "popup"
+command = "$HOME/.zsh/bin/herdr-keys"
+description = "cheat sheet: keys beyond herdr's (shell, Neovim, lazygit)"
+width = "80%"
+height = "90%"
+
 [[keys.command]]
 key = "ctrl+alt+r"
 type = "popup"
