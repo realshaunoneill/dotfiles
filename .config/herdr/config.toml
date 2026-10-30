@@ -119,7 +119,8 @@ prompt_new_workspace_name = false
 row_gap = 1
 
 # Each Claude row in the sidebar: the session's own name, then its state in words (coloured
-# by state, as herdr draws it) and the workspace it's in. The name is the terminal title,
+# by state, as herdr draws it) and the workspace it's in. The state word carries the time it
+# finished or got blocked ("done 14:32"), set by ~/.claude/hooks/herdr-agent-time.sh. The name is the terminal title,
 # where Claude puts the session's --name (from clw) or its generated title; herdr strips the
 # spinner glyph in front. Until 2026-10-29 the workspace came first, so two agents in one
 # workspace read alike ("Receipt Wise · 1", "Receipt Wise · ipad"). herdr's default last
