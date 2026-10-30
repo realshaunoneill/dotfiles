@@ -144,6 +144,7 @@ Keys that act on the focused pane's project. That's the pane's own repo, or, for
 | `ctrl+alt+o` | open the file Claude last edited, at that line, in VS Code |
 | `ctrl+alt+f` | popup: fuzzy-find a file with a preview; Enter opens it in VS Code, `ctrl-e` in Neovim (`bin/herdr-find-file`) |
 | `ctrl+alt+v` | the project in Neovim, in a zoomed pane over the agent; `prefix+z` shows both (`bin/herdr-nvim`) |
+| `ctrl+alt+r` | popup: lazygit on the project, to review the changes (diffs, staging, committing); `q` closes it (`bin/herdr-review`) |
 | `ctrl+alt+g` | the branch's pull request in the browser (`bin/herdr-pr`) |
 
 Neovim runs [LazyVim](https://www.lazyvim.org): `.config/nvim` is its starter config, and `~/.config/nvim` links to the copy in `~/Personal/dotfiles` because Lazy writes `lazy-lock.json` there (commit it after `:Lazy update`). `<space>` opens LazyVim's key menu, `<space>e` the file tree, `<space><space>` file search, `<space>/` text search, `<space>gg` lazygit. Its icons need a Nerd Font: set iTerm's font to *SauceCodePro Nerd Font* (Profiles → Text).

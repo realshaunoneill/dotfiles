@@ -1,0 +1,13 @@
+#!/bin/bash
+# herdr popup: lazygit on the focused pane's project (see agent-where), to review what the
+# agent changed: changed files on the left, the diff on the right, staging and committing if
+# wanted. q closes it.
+
+PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/bin:/bin:$PATH"
+
+repo=$("$HOME/.zsh/bin/agent-where" --pane "${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}") || {
+  echo "No project found for this pane. Press any key to close."
+  read -r -n 1 -s
+  exit 1
+}
+cd "$repo" && exec lazygit
