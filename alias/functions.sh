@@ -23,6 +23,13 @@ function zResetLocalConfig () {
   local nvim="$HOME/Personal/dotfiles/.config/nvim"
   [ -d "$nvim" ] || nvim="$ZDOTDIR/.config/nvim"
   [ -e "$HOME/.config/nvim" ] || ln -s "$nvim" "$HOME/.config/nvim"
+
+  # iTerm's "herdr" profile, from the same clone iTerm loads its settings from.
+  local iterm="$HOME/Personal/dotfiles/.config/iterm2"
+  [ -d "$iterm" ] || iterm="$ZDOTDIR/.config/iterm2"
+  local dynamic="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
+  command mkdir -p "$dynamic"
+  ln -sfn "$iterm/DynamicProfiles/herdr.json" "$dynamic/herdr.json"
 }
 
 # Updates the home directory vim config from the dotfiles config

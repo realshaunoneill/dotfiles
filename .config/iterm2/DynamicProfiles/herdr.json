@@ -1,0 +1,10 @@
+{
+  "Profiles": [
+    {
+      "Name": "herdr",
+      "Guid": "083D5191-1B6C-4257-A175-73E7FD995F88",
+      "Dynamic Profile Parent GUID": "6F1A71BB-3D5C-427A-9A20-3C444D44E0B8",
+      "Triggers": []
+    }
+  ]
+}

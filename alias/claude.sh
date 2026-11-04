@@ -140,9 +140,27 @@ if command -v claude &>/dev/null; then
   #
   # Each titles its iTerm tab after its tree. herdr leaves that title alone because
   # window_title is "" in config.toml.
+  #
+  # While herdr runs, the tab is on the "herdr" profile (.config/iterm2/DynamicProfiles,
+  # Default without its triggers). iTerm 3.7's Claude Code integration adds a trigger to
+  # Default that puts any tab running a `claude` job into its Claude Code workgroup, and
+  # renames the tab to the workgroup's "Chat". The herdr server is a child of the first
+  # client, so every Claude in it counts as that tab's job, and both tabs read "Chat"
+  # (2026-11-04). The workgroup's Diff and Code Review would only run in ~/Development or
+  # ~/Personal anyway, neither of them a repo. Back to the tab's own profile afterwards,
+  # so a Claude run straight in iTerm still gets the workgroup.
   if command -v herdr &>/dev/null; then
-    function hw() { printf '\e]0;%s\a' Development; herdr --session work "$@"; }
-    function hp() { printf '\e]0;%s\a' Personal; herdr --session personal "$@"; }
+    function _herdr_tab() {
+      local title="$1" rc
+      shift
+      printf '\e]1337;SetProfile=herdr\a\e]0;%s\a' "$title"
+      herdr "$@"
+      rc=$?
+      printf '\e]1337;SetProfile=%s\a' "${ITERM_PROFILE:-Default}"
+      return $rc
+    }
+    function hw() { _herdr_tab Development --session work "$@"; }
+    function hp() { _herdr_tab Personal --session personal "$@"; }
   fi
 
   # Run a session on one of the GPT models the llmproxy also serves.

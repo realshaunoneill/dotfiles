@@ -130,7 +130,7 @@ accounts are signed in.
 
 # herdr
 [herdr](https://herdr.dev) is the terminal multiplexer the Claude sessions run in. Its config is `.config/herdr/config.toml`, which `~/.config/herdr/config.toml` links to; a change goes live with `zupdate` and `herdr server reload-config`. That file's comments give the reason for each setting.
-- `hw` / `hp` – open the `work` and `personal` herdr sessions. Each titles its iTerm tab "Development" or "Personal", and either can be put away with `herdr session stop` without touching the other.
+- `hw` / `hp` – open the `work` and `personal` herdr sessions. Each titles its iTerm tab "Development" or "Personal", and either can be put away with `herdr session stop` without touching the other. While herdr runs, the tab is on iTerm's `herdr` profile, which keeps it out of iTerm's Claude Code workgroup (see iTerm2 below).
 - The prefix key is `ctrl+space` (not herdr's default `ctrl+b`, which Claude Code uses). `prefix+?` lists every herdr binding, and `prefix+i` opens a cheat sheet of the rest: shell, Neovim, lazygit and iTerm keys (`.config/herdr/cheatsheet.md`, shown by `bin/herdr-keys`).
 - `ctrl+alt+↑/↓` (or `ctrl+alt+p/n`) – previous / next agent, every row in the sidebar's agent list. `ctrl+alt+shift+↑/↓` – previous / next workspace, including ones with no agent; `ctrl+alt+1..9` – jump to one.
 - A new workspace is named after the first Claude session in it, by `claude/hooks/herdr-workspace-title.sh`.
@@ -154,6 +154,8 @@ Neovim runs [LazyVim](https://www.lazyvim.org): `.config/nvim` is its starter co
 iTerm2 keeps its settings in `.config/iterm2/com.googlecode.iterm2.plist`: profile, colours, key bindings and the rest. To use them, open Settings → General → Settings, tick **Load settings from a custom folder or URL**, choose `~/Personal/dotfiles/.config/iterm2`, and set **Save changes** to **Automatically**. That folder is the clone you commit from. iTerm writes to it, and in `~/.zsh` its saves would leave uncommitted changes that can block `zupdate` and the automatic update.
 
 iTerm reads the folder each time it starts, so there's nothing to load by hand. With **Automatically**, each settings change is written to the file straight away. It then shows up as an uncommitted change: review the diff (the repo is public) and commit when you like. iTerm also saves window positions, so a diff may include those. **Manually** writes only when you click **Save Now** or accept iTerm's offer to save on quit; anything else is replaced by the folder's copy at the next launch.
+
+One profile lives outside the plist: `.config/iterm2/DynamicProfiles/herdr.json`, linked into `~/Library/Application Support/iTerm2/DynamicProfiles` by `zResetLocalConfig`. It is Default without Default's triggers, the two that iTerm 3.7's Claude Code integration installs. Those put a tab running `claude` into the Claude Code workgroup (the Chat / Diff / Code Review bar) and rename the tab "Chat". A herdr tab counts as running `claude`, because the herdr server is a child of the client in that tab, so `hw` / `hp` switch to this profile for as long as herdr runs. In herdr panes `.zshrc` also unsets `TERM_SESSION_ID`, so iTerm's Claude hook (`cc-status`) no longer paints one tab's "working" / "idle" with whichever of the session's Claudes reported last.
 
 # Checks
 `.github/workflows/checks.yml` runs on every push: a `zsh -n` syntax check on the zsh files, `shellcheck` on the bash scripts, and `gitleaks` over the full history. Run the same locally once `brew bundle` has installed shellcheck and gitleaks:

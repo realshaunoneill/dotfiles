@@ -147,7 +147,16 @@ source $ZDOTDIR/alias/functions.sh
 # claude from herdr, which then shows no agent status, can't target the agent and can't
 # resume it after a restart (measured 2026-10-28). PROCESS_LAUNCHED_BY_Q is Kiro's own
 # "skip" check. It is not exported, so it only affects this shell's startup.
-[[ -n "${HERDR_ENV:-}" ]] && PROCESS_LAUNCHED_BY_Q=1
+#
+# Drop iTerm's session id too. A pane inherits it from whichever iTerm tab started the
+# herdr server, and iTerm's own Claude Code hook (cc-status in ~/.claude/settings.json)
+# posts each session's state to the tab it names. So every Claude in the herdr session
+# painted one "working"/"idle" on that tab, whichever reported last, or on an unrelated
+# tab after a reattach. herdr's sidebar shows each agent's own state instead (2026-11-04).
+if [[ -n "${HERDR_ENV:-}" ]]; then
+  PROCESS_LAUNCHED_BY_Q=1
+  unset TERM_SESSION_ID ITERM_SESSION_ID
+fi
 
 # Source .zprofile if it exists
 [[ -f $HOME/.zprofile ]] && source $HOME/.zprofile
