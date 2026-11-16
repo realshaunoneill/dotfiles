@@ -1,0 +1,228 @@
+#!/bin/bash
+# Add today's calendar meetings to today's Obsidian daily note, as `### HH:MM Title` headings
+# under `## Meetings`, with team members linked to their person notes.
+#   daily-meetings              run the shortcut and merge its meetings into today's note
+#   daily-meetings --dry-run    print the merged note instead of writing it
+#   daily-meetings --stdin      read the shortcut's output from stdin instead (for testing)
+#   daily-meetings --install    run it at 11:00 on weekdays, as a user LaunchAgent
+#   daily-meetings --uninstall  stop the LaunchAgent
+#
+# The calendar is read by a Shortcuts shortcut, because Shortcuts already has calendar access
+# and needs no admin rights. It prints one block per event, attendees last:
+#   @@EVENT
+#   time: 10:00
+#   allday: No
+#   status: Accepted
+#   title: Weekly sync
+#   attendees:
+#   <one name or email per line>
+# How to build it is in the vault's "Raycast Workflow" runbook.
+#
+# Re-running is safe: a meeting whose title is already a `###` heading in the note is skipped,
+# and nothing you wrote under a heading is touched. All-day events, declined meetings and
+# events with no other attendees are left out. Attendee emails are counted, never written.
+# Team members are whoever has a note in the vault's People folder, read at run time.
+set -euo pipefail
+
+VAULT="${DAILY_MEETINGS_VAULT:-$HOME/Personal/Vault}"
+# Not "${VAR:-Today's Meetings}": bash 3.2 reads that apostrophe as opening a quote.
+SHORTCUT="Today's Meetings"
+[ -n "${DAILY_MEETINGS_SHORTCUT:-}" ] && SHORTCUT="$DAILY_MEETINGS_SHORTCUT"
+LABEL="local.daily-meetings"
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+LOG="$HOME/Library/Logs/daily-meetings.log"
+
+dry_run=0
+from_stdin=0
+case "${1:-}" in
+  --dry-run) dry_run=1 ;;
+  --stdin) from_stdin=1; [ "${2:-}" = "--dry-run" ] && dry_run=1 ;;
+  --install)
+    self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+    {
+      echo '<?xml version="1.0" encoding="UTF-8"?>'
+      echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'
+      echo '<plist version="1.0"><dict>'
+      echo "  <key>Label</key><string>$LABEL</string>"
+      echo "  <key>ProgramArguments</key><array><string>/bin/bash</string><string>$self</string></array>"
+      echo '  <key>StartCalendarInterval</key><array>'
+      for day in 1 2 3 4 5; do
+        echo "    <dict><key>Weekday</key><integer>$day</integer><key>Hour</key><integer>11</integer><key>Minute</key><integer>0</integer></dict>"
+      done
+      echo '  </array>'
+      echo "  <key>StandardOutPath</key><string>$LOG</string>"
+      echo "  <key>StandardErrorPath</key><string>$LOG</string>"
+      echo '</dict></plist>'
+    } > "$PLIST"
+    /usr/bin/plutil -lint "$PLIST" >/dev/null
+    launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+    launchctl bootstrap "gui/$(id -u)" "$PLIST"
+    echo "daily-meetings: runs $self at 11:00 on weekdays; log in $LOG"
+    exit 0 ;;
+  --uninstall)
+    launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
+    echo "daily-meetings: stopped. Delete $PLIST by hand to remove it for good."
+    exit 0 ;;
+  "") ;;
+  *) sed -n '2,8p' "$0"; exit 2 ;;
+esac
+
+if [ "$from_stdin" = 1 ]; then
+  events=$(cat)
+elif ! events=$(/usr/bin/shortcuts run "$SHORTCUT" 2>&1); then
+  echo "daily-meetings: the \"$SHORTCUT\" shortcut failed: $events" >&2
+  exit 1
+fi
+
+# The merge is Python, fed the events on stdin. read -d '' stops at end of input and returns 1.
+read -r -d '' py <<'PY' || true
+import datetime, json, os, pathlib, re, sys
+
+vault = pathlib.Path(os.environ["VAULT"])
+cfg = json.loads((vault / ".obsidian/daily-notes.json").read_text())
+if cfg.get("format", "YYYY-MM-DD") != "YYYY-MM-DD":
+    sys.exit("daily-meetings: only the YYYY-MM-DD daily-note format is supported")
+today = datetime.date.today().isoformat()
+note = vault / cfg.get("folder", "") / f"{today}.md"
+tpl = cfg.get("template", "")
+template = vault / (tpl if tpl.endswith(".md") else tpl + ".md") if tpl else None
+
+def norm(s):
+    return re.sub(r"[^a-z]", "", s.lower())
+
+people = {norm(p.stem): p.stem for p in (vault / "02 Areas/Work/Team/People").glob("*.md")}
+me = norm(os.environ.get("DAILY_MEETINGS_SELF", "Shaun O'Neill"))
+
+# Parse the shortcut's blocks. Attendees come last, one per line.
+events, cur, in_attendees = [], None, False
+for line in sys.stdin.read().splitlines():
+    if line.strip() == "@@EVENT":
+        cur, in_attendees = {"attendees": []}, False
+        events.append(cur)
+    elif cur is None:
+        continue
+    elif in_attendees:
+        if line.strip():
+            cur["attendees"].append(line.strip())
+    else:
+        m = re.match(r"\s*(\w+):\s?(.*)$", line)
+        if m and m.group(1).lower() == "attendees":
+            in_attendees = True
+            if m.group(2).strip():
+                cur["attendees"].append(m.group(2).strip())
+        elif m:
+            cur[m.group(1).lower()] = m.group(2).strip()
+
+def hhmm(s):
+    m = re.match(r"\s*(\d{1,2})[:.](\d{2})\s*([AaPp][Mm])?", s or "")
+    if not m:
+        return None
+    h, mi, ampm = int(m.group(1)), m.group(2), (m.group(3) or "").lower()
+    if ampm == "pm" and h < 12:
+        h += 12
+    if ampm == "am" and h == 12:
+        h = 0
+    return f"{h:02d}:{mi}"
+
+skipped = {"all-day": 0, "declined": 0, "no other attendees": 0}
+meetings, seen = [], set()
+for e in events:
+    title = re.sub(r"\s+", " ", e.get("title", "")).strip()
+    time = hhmm(e.get("time"))
+    if not title or not time:
+        continue
+    if e.get("allday", "").lower() in ("yes", "true", "1"):
+        skipped["all-day"] += 1
+        continue
+    if "declin" in e.get("status", "").lower():
+        skipped["declined"] += 1
+        continue
+    team, names, emails = [], [], 0
+    for a in e["attendees"]:
+        key = norm(a.split("@")[0] if "@" in a else a)
+        if key == me:
+            continue
+        if key in people:
+            link = f"[[{people[key]}]]"
+            if link not in team:
+                team.append(link)
+        elif "@" in a:
+            emails += 1
+        elif a not in names:
+            names.append(a)
+    if not (team or names or emails):
+        skipped["no other attendees"] += 1
+        continue
+    if (time, title.lower()) in seen:
+        continue
+    seen.add((time, title.lower()))
+    rest = len(names[3:]) + emails
+    who = team + names[:3]
+    if rest:
+        who.append(f"+{rest} other{'s' if rest > 1 else ''}" if who else f"{rest} attendee{'s' if rest > 1 else ''}")
+    meetings.append((time, title, ", ".join(who)))
+
+if note.exists():
+    text = note.read_text()
+elif template and template.exists():
+    text = template.read_text()
+else:
+    text = "---\ntype: daily\ntriaged:\n---\n"
+lines = text.split("\n")
+
+# A meeting is already in the note if it is a `###` heading (time optional), or a line that is
+# all bold, which is how meetings were written by hand before this existed.
+def heading_title(line):
+    if line.startswith("### "):
+        return re.sub(r"^\d{1,2}:\d{2}\s+", "", line[4:].strip()).lower()
+    m = re.match(r"^\*\*(.+?)\*\*\s*$", line)
+    return m.group(1).strip().lower() if m else None
+
+present = {heading_title(l) for l in lines} - {None}
+added = 0
+for time, title, who in sorted(meetings):
+    if title.lower() in present:
+        continue
+    start = next((i for i, l in enumerate(lines) if l.strip().lower() == "## meetings"), None)
+    if start is None:
+        # An older note: give it a Meetings section, ended by a Notes heading so what is
+        # already written stays outside it.
+        notes = next((i for i, l in enumerate(lines) if l.strip().lower() == "## notes"), None)
+        if notes is not None:
+            lines[notes:notes] = ["## Meetings", ""]
+            start = notes
+        else:
+            body = 0
+            if lines and lines[0] == "---":
+                body = next(i for i in range(1, len(lines)) if lines[i] == "---") + 1
+            lines[body:body] = ["## Meetings", "", "## Notes", ""]
+            start = body
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    at = end
+    for i in range(start + 1, end):
+        t = hhmm(lines[i][4:]) if lines[i].startswith("### ") else None
+        if t and t > time:
+            at = i
+            break
+    block = [f"### {time} {title}", who, ""]
+    if at == end and lines[at - 1].strip():
+        block.insert(0, "")
+    lines[at:at] = block
+    present.add(title.lower())
+    added += 1
+
+out = "\n".join(lines)
+skips = ", ".join(f"{n} {k}" for k, n in skipped.items() if n)
+summary = f"daily-meetings: {added} new meeting{'s' if added != 1 else ''} for {today}" + (f" (skipped {skips})" if skips else "")
+if os.environ.get("DRY_RUN") == "1":
+    print(out)
+    print(summary, file=sys.stderr)
+elif added:
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text(out)
+    print(summary)
+else:
+    print(summary)
+PY
+
+printf '%s\n' "$events" | VAULT="$VAULT" DRY_RUN="$dry_run" /usr/bin/python3 -I -c "$py"
