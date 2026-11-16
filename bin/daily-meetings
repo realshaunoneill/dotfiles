@@ -3,8 +3,10 @@
 # under `## Meetings`, with team members linked to their person notes.
 #   daily-meetings                    ask Shortcuts to run the "Todays Meetings" shortcut, which
 #                                     reads the calendar and hands the events back to --stdin
-#   daily-meetings --stdin            merge events from stdin into today's note: the shortcut's
-#                                     last step. Add --dry-run to print the note, not write it
+#   daily-meetings --saved            merge the events the shortcut saved: its last step.
+#                                     --dry-run works here too
+#   daily-meetings --stdin            merge events from stdin instead. Add --dry-run to print
+#                                     the note, not write it
 #   daily-meetings --install          run it at 11:00 on weekdays, as a user LaunchAgent
 #   daily-meetings --uninstall        stop the LaunchAgent
 #
@@ -12,8 +14,12 @@
 # and needs no admin rights. The shortcut calls this script rather than the other way round:
 # run by `shortcuts run`, its Find Calendar Events came back empty, while the same shortcut run
 # inside Shortcuts found the meetings (2026-11-16). Opening its shortcuts:// link runs it inside
-# Shortcuts. Its last action is Run Shell Script, `~/.zsh/bin/daily-meetings --stdin`, fed every
-# work event of the day, one block each, attendees last. Unknown keys are ignored:
+# Shortcuts. It saves every work event of the day to SAVED, then runs Run Shell Script
+# `~/.zsh/bin/daily-meetings --saved` with no input. Handing the events to the shell step
+# directly made Shortcuts ask "use N calendar events in a shell script?" on any day with more
+# events than last approved, since "Always Allow" remembers a count, and an unattended run
+# can't answer. The file is emptied once read. One block per event, attendees last; unknown
+# keys are ignored:
 #   @@EVENT
 #   time: 16 Nov 2026 at 10:00      (start; any date format, the script finds the time)
 #   end: 16 Nov 2026 at 10:30
@@ -43,10 +49,13 @@ SHORTCUT="${DAILY_MEETINGS_SHORTCUT:-Todays Meetings}"
 LABEL="local.daily-meetings"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/daily-meetings.log"
+SAVED="$HOME/Library/Caches/daily-meetings/events.txt"
 
 dry_run=0
+from_saved=0
 case "${1:-}" in
   --stdin) [ "${2:-}" = "--dry-run" ] && dry_run=1 ;;
+  --saved) from_saved=1; [ "${2:-}" = "--dry-run" ] && dry_run=1 ;;
   --install)
     self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
     {
@@ -78,10 +87,21 @@ case "${1:-}" in
     open -g "shortcuts://run-shortcut?name=${SHORTCUT// /%20}"
     echo "daily-meetings: asked Shortcuts to run \"$SHORTCUT\""
     exit 0 ;;
-  *) sed -n '2,9p' "$0"; exit 2 ;;
+  *) sed -n '2,11p' "$0"; exit 2 ;;
 esac
 
-events=$(cat)
+if [ "$from_saved" = 1 ]; then
+  if [ ! -s "$SAVED" ]; then
+    echo "$(date '+%F %T') daily-meetings: nothing saved in $SAVED" >> "$LOG"
+    echo "daily-meetings: nothing saved in $SAVED"
+    exit 1
+  fi
+  events=$(cat "$SAVED")
+  # Emptied, not deleted: the shortcut overwrites it next run. A dry run leaves it be.
+  [ "$dry_run" = 1 ] || : > "$SAVED"
+else
+  events=$(cat)
+fi
 
 # The merge is Python, fed the events on stdin. read -d '' stops at end of input and returns 1.
 read -r -d '' py <<'PY' || true
