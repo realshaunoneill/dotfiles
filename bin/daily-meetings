@@ -113,8 +113,11 @@ for line in sys.stdin.read().splitlines():
         elif m:
             cur[m.group(1).lower()] = m.group(2).strip()
 
-def hhmm(s):
-    m = re.match(r"\s*(\d{1,2})[:.](\d{2})\s*([AaPp][Mm])?", s or "")
+# A heading must start with its time. An event's time can sit anywhere: unformatted, Shortcuts
+# prints a date such as "16 Nov 2026 at 10:00".
+def hhmm(s, anywhere=False):
+    pattern = r"(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?"
+    m = re.search(pattern, s or "") if anywhere else re.match(r"\s*" + pattern, s or "")
     if not m:
         return None
     h, mi, ampm = int(m.group(1)), m.group(2), (m.group(3) or "").lower()
@@ -128,7 +131,7 @@ skipped = {"all-day": 0, "declined": 0, "no other attendees": 0}
 meetings, seen = [], set()
 for e in events:
     title = re.sub(r"\s+", " ", e.get("title", "")).strip()
-    time = hhmm(e.get("time"))
+    time = hhmm(e.get("time"), anywhere=True)
     if not title or not time:
         continue
     if e.get("allday", "").lower() in ("yes", "true", "1"):
