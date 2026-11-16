@@ -1,14 +1,19 @@
 #!/bin/bash
 # Add today's calendar meetings to today's Obsidian daily note, as `### HH:MM Title` headings
 # under `## Meetings`, with team members linked to their person notes.
-#   daily-meetings              run the shortcut and merge its meetings into today's note
-#   daily-meetings --dry-run    print the merged note instead of writing it
-#   daily-meetings --stdin      read the shortcut's output from stdin instead (for testing)
-#   daily-meetings --install    run it at 11:00 on weekdays, as a user LaunchAgent
-#   daily-meetings --uninstall  stop the LaunchAgent
+#   daily-meetings                    ask Shortcuts to run the "Todays Meetings" shortcut, which
+#                                     reads the calendar and hands the events back to --stdin
+#   daily-meetings --stdin            merge events from stdin into today's note: the shortcut's
+#                                     last step. Add --dry-run to print the note, not write it
+#   daily-meetings --install          run it at 11:00 on weekdays, as a user LaunchAgent
+#   daily-meetings --uninstall        stop the LaunchAgent
 #
 # The calendar is read by a Shortcuts shortcut, because Shortcuts already has calendar access
-# and needs no admin rights. It prints one block per event, attendees last:
+# and needs no admin rights. The shortcut calls this script rather than the other way round:
+# run by `shortcuts run`, its Find Calendar Events came back empty, while the same shortcut run
+# inside Shortcuts found the meetings (2026-11-16). Opening its shortcuts:// link runs it inside
+# Shortcuts. Its last action is Run Shell Script, `~/.zsh/bin/daily-meetings --stdin`, with
+# the repeat results passed to stdin: one block per event, attendees last:
 #   @@EVENT
 #   time: 10:00
 #   allday: No
@@ -20,8 +25,9 @@
 #
 # Re-running is safe: a meeting whose title is already a `###` heading in the note is skipped,
 # and nothing you wrote under a heading is touched. All-day events, declined meetings and
-# events with no other attendees are left out. Attendee emails are counted, never written.
-# Team members are whoever has a note in the vault's People folder, read at run time.
+# events with no other attendees are left out, and so are rooms. Team members are whoever has a
+# note in the vault's People folder, read at run time. Colleagues, whose email shares your
+# domain, are named from it; anyone else is only counted, so no outside address is written.
 set -euo pipefail
 
 VAULT="${DAILY_MEETINGS_VAULT:-$HOME/Personal/Vault}"
@@ -33,10 +39,8 @@ PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/daily-meetings.log"
 
 dry_run=0
-from_stdin=0
 case "${1:-}" in
-  --dry-run) dry_run=1 ;;
-  --stdin) from_stdin=1; [ "${2:-}" = "--dry-run" ] && dry_run=1 ;;
+  --stdin) [ "${2:-}" = "--dry-run" ] && dry_run=1 ;;
   --install)
     self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
     {
@@ -63,16 +67,15 @@ case "${1:-}" in
     launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
     echo "daily-meetings: stopped. Delete $PLIST by hand to remove it for good."
     exit 0 ;;
-  "") ;;
-  *) sed -n '2,8p' "$0"; exit 2 ;;
+  "")
+    # -g leaves Shortcuts in the background. It runs the shortcut, which calls --stdin.
+    open -g "shortcuts://run-shortcut?name=${SHORTCUT// /%20}"
+    echo "daily-meetings: asked Shortcuts to run \"$SHORTCUT\""
+    exit 0 ;;
+  *) sed -n '2,9p' "$0"; exit 2 ;;
 esac
 
-if [ "$from_stdin" = 1 ]; then
-  events=$(cat)
-elif ! events=$(/usr/bin/shortcuts run "$SHORTCUT" 2>&1); then
-  echo "daily-meetings: the \"$SHORTCUT\" shortcut failed: $events" >&2
-  exit 1
-fi
+events=$(cat)
 
 # The merge is Python, fed the events on stdin. read -d '' stops at end of input and returns 1.
 read -r -d '' py <<'PY' || true
@@ -92,6 +95,14 @@ def norm(s):
 
 people = {norm(p.stem): p.stem for p in (vault / "02 Areas/Work/Team/People").glob("*.md")}
 me = norm(os.environ.get("DAILY_MEETINGS_SELF", "Shaun O'Neill"))
+
+def is_room(a):
+    # "Belfast-4-C.S. Lewis (3) [Zoom Room]": a capacity in brackets, a [tag], or "room".
+    return bool(re.search(r"\broom\b|\[.*\]|\(\d+\)", a, re.I))
+
+def name_from_email(local):
+    words = [w[:1].upper() + w[1:] for w in re.split(r"[._-]+", local) if w]
+    return " ".join("Mc" + w[2:3].upper() + w[3:] if w.lower().startswith("mc") and len(w) > 2 else w for w in words)
 
 # Parse the shortcut's blocks. Attendees come last, one per line.
 events, cur, in_attendees = [], None, False
@@ -127,6 +138,10 @@ def hhmm(s, anywhere=False):
         h = 0
     return f"{h:02d}:{mi}"
 
+# Your domain is the one on your own attendee entry, so nothing about it is written here.
+my_domain = next((a.partition("@")[2].lower() for e in events for a in e["attendees"]
+                  if "@" in a and norm(a.partition("@")[0]) == me), None)
+
 skipped = {"all-day": 0, "declined": 0, "no other attendees": 0}
 meetings, seen = [], set()
 for e in events:
@@ -142,17 +157,22 @@ for e in events:
         continue
     team, names, emails = [], [], 0
     for a in e["attendees"]:
-        key = norm(a.split("@")[0] if "@" in a else a)
+        if is_room(a):
+            continue
+        local, _, domain = a.partition("@")
+        key = norm(local if domain else a)
         if key == me:
             continue
         if key in people:
             link = f"[[{people[key]}]]"
             if link not in team:
                 team.append(link)
-        elif "@" in a:
+        elif domain and domain.lower() != my_domain:
             emails += 1
-        elif a not in names:
-            names.append(a)
+        else:
+            name = name_from_email(local) if domain else a
+            if name not in names:
+                names.append(name)
     if not (team or names or emails):
         skipped["no other attendees"] += 1
         continue
@@ -228,4 +248,12 @@ else:
     print(summary)
 PY
 
-printf '%s\n' "$events" | VAULT="$VAULT" DRY_RUN="$dry_run" /usr/bin/python3 -I -c "$py"
+if [ "$dry_run" = 1 ]; then
+  printf '%s\n' "$events" | VAULT="$VAULT" DRY_RUN=1 /usr/bin/python3 -I -c "$py"
+  exit
+fi
+# The shortcut shows this line as its result. The log keeps every run, timed.
+summary=$(printf '%s\n' "$events" | VAULT="$VAULT" DRY_RUN=0 /usr/bin/python3 -I -c "$py" 2>&1) || {
+  echo "$(date '+%F %T') $summary" >> "$LOG"; echo "$summary"; exit 1; }
+echo "$(date '+%F %T') $summary" >> "$LOG"
+echo "$summary"

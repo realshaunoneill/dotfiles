@@ -158,12 +158,14 @@ iTerm reads the folder each time it starts, so there's nothing to load by hand. 
 One profile lives outside the plist: `.config/iterm2/DynamicProfiles/herdr.json`, linked into `~/Library/Application Support/iTerm2/DynamicProfiles` by `zResetLocalConfig`. It is Default without Default's triggers, the two that iTerm 3.7's Claude Code integration installs. Those put a tab running `claude` into the Claude Code workgroup (the Chat / Diff / Code Review bar) and rename the tab "Chat". A herdr tab counts as running `claude`, because the herdr server is a child of the client in that tab, so `hw` / `hp` switch to this profile for as long as herdr runs. In herdr panes `.zshrc` also unsets `TERM_SESSION_ID`, so iTerm's Claude hook (`cc-status`) no longer paints one tab's "working" / "idle" with whichever of the session's Claudes reported last.
 
 # Meetings in the daily note
-`bin/daily-meetings` adds today's calendar meetings to today's Obsidian daily note. Each one becomes a `### HH:MM Title` heading under `## Meetings`, with team members linked to their person notes. The calendar is read by a Shortcuts shortcut, **Todays Meetings** (no apostrophe), because Shortcuts already has calendar access and needs no admin rights. The script's header comment gives the output format the shortcut must print.
-- `daily-meetings --install` runs it at 11:00 on weekdays from a user LaunchAgent (`local.daily-meetings`). It logs to `~/Library/Logs/daily-meetings.log`. Install it from `~/.zsh/bin`, the copy that updates itself.
-- A Raycast script command, **Refresh Meetings**, runs it on demand.
-- `daily-meetings --stdin --dry-run` reads sample shortcut output from stdin and prints the merged note without writing it.
+`bin/daily-meetings` adds today's calendar meetings to today's Obsidian daily note. Each one becomes a `### HH:MM Title` heading under `## Meetings`, with team members linked to their person notes. The calendar is read by a Shortcuts shortcut, **Todays Meetings** (no apostrophe), because Shortcuts already has calendar access and needs no admin rights.
 
-Re-running it is safe. A meeting whose title is already a heading, or a line in bold, is skipped, and text under a heading is never touched. All-day events, declined meetings and events with no other attendees are left out. Attendee emails are counted but never written into the note.
+The shortcut calls the script, not the other way round. Run by `shortcuts run`, its Find Calendar Events comes back empty, while the same shortcut run inside Shortcuts finds the meetings. So `daily-meetings` with no arguments opens the shortcut's `shortcuts://` link. The shortcut's last action, Run Shell Script `~/.zsh/bin/daily-meetings --stdin`, gets the events on stdin and merges them. That needs Shortcuts → Settings → Advanced → **Allow Running Scripts**. The script's header comment gives the format the shortcut must print.
+- `daily-meetings --install` runs it at 11:00 on weekdays from a user LaunchAgent (`local.daily-meetings`). Install it from `~/.zsh/bin`, the copy that updates itself. Each merge is logged to `~/Library/Logs/daily-meetings.log`.
+- A Raycast script command, **Refresh Meetings**, runs it on demand.
+- `daily-meetings --stdin --dry-run` reads sample events from stdin and prints the merged note without writing it.
+
+Re-running it is safe. A meeting whose title is already a heading, or a line in bold, is skipped, and text under a heading is never touched. All-day events, declined meetings, rooms and events with no other attendees are left out. Colleagues, whose email shares your domain, are named from it (`first_last@` → First Last). Anyone else is only counted, so no outside address is written into the note.
 
 # Checks
 `.github/workflows/checks.yml` runs on every push: a `zsh -n` syntax check on the zsh files, `shellcheck` on the bash scripts, and `gitleaks` over the full history. Run the same locally once `brew bundle` has installed shellcheck and gitleaks:
