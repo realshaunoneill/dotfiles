@@ -25,9 +25,9 @@
 set -euo pipefail
 
 VAULT="${DAILY_MEETINGS_VAULT:-$HOME/Personal/Vault}"
-# Not "${VAR:-Today's Meetings}": bash 3.2 reads that apostrophe as opening a quote.
-SHORTCUT="Today's Meetings"
-[ -n "${DAILY_MEETINGS_SHORTCUT:-}" ] && SHORTCUT="$DAILY_MEETINGS_SHORTCUT"
+# No apostrophe in the name: typed into Shortcuts it can become a curly one that never matches.
+# (And bash 3.2 reads an apostrophe inside "${VAR:-…}" as opening a quote.)
+SHORTCUT="${DAILY_MEETINGS_SHORTCUT:-Todays Meetings}"
 LABEL="local.daily-meetings"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/daily-meetings.log"
