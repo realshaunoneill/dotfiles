@@ -165,7 +165,9 @@ The shortcut calls the script, not the other way round. Run by `shortcuts run`, 
 - A Raycast script command, **Refresh Meetings**, runs it on demand.
 - `daily-meetings --stdin --dry-run` reads sample events from stdin and prints the merged note without writing it.
 
-Re-running it is safe. A meeting whose title is already a heading, or a line in bold, is skipped, and text under a heading is never touched. All-day events, declined meetings, rooms and events with no other attendees are left out. Colleagues, whose email shares your domain, are named from it (`first_last@` → First Last). Anyone else is only counted, so no outside address is written into the note.
+The shortcut only fetches; the script decides. All-day events, declined meetings, events with nobody else in them, and meetings of more than 15 people that you haven't accepted are left out. Unanswered meetings are marked `not answered` (or `maybe`). Rooms and groups are dropped, team members are linked, colleagues sharing your email domain are named from it (`first_last@` → First Last), and anyone else is only counted, so no outside address is written. Every run logs what it left out and why.
+
+Re-running it is safe. A meeting already in the note as a heading (or a shortened one), or a line in bold, isn't added again, and nor is one you deleted after an earlier run added it (`~/Library/Caches/daily-meetings/added.txt`). Text you wrote is never touched.
 
 # Checks
 `.github/workflows/checks.yml` runs on every push: a `zsh -n` syntax check on the zsh files, `shellcheck` on the bash scripts, and `gitleaks` over the full history. Run the same locally once `brew bundle` has installed shellcheck and gitleaks:
