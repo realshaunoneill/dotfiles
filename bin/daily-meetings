@@ -31,7 +31,8 @@
 # How to build it is in the vault's "Raycast Workflow" runbook.
 #
 # The shortcut only fetches; this script decides. It leaves out all-day events, meetings you
-# declined, meetings of more than LARGE_MEETING people, and events with nobody else in them.
+# declined, meetings of more than LARGE_MEETING people that you haven't accepted, and events with
+# nobody else in them.
 # A meeting you haven't answered, or said maybe to, is kept and marked "not answered"/"maybe".
 # People are email addresses: rooms and groups, which arrive as bare names, are dropped. Team
 # members (a note in the vault's People folder) are linked, colleagues sharing your email
@@ -112,7 +113,7 @@ fi
 read -r -d '' py <<'PY' || true
 import datetime, json, os, pathlib, re, sys
 
-LARGE_MEETING = 15  # people, you included: a bigger meeting is left out
+LARGE_MEETING = 15  # people, you included: a bigger meeting is left out unless you accepted it
 SMALL_MEETING = 4   # people besides you and the team: up to this many are all named
 
 vault = pathlib.Path(os.environ["VAULT"])
@@ -228,7 +229,9 @@ for e in events:
     if not (team or others):
         left_out.append(("no one else", title))
         continue
-    if headcount > LARGE_MEETING:
+    # Accepting is the signal you're going, so an accepted meeting goes in whatever its size.
+    # A big one you haven't accepted is usually a broadcast invite, and stays out.
+    if headcount > LARGE_MEETING and status.lower() != "accepted":
         left_out.append((f"{headcount} people, {status or 'no status'}", title))
         continue
     team.sort()  # attendees arrive in a different order each run; sorted, a refresh changes nothing
@@ -306,9 +309,16 @@ added_before = set()
 if record.exists():
     added_before = {t for d, _, t in (l.partition("\t") for l in record.read_text().splitlines()) if d == today}
 present = {heading_title(l) for l in lines} - {None}
+
+def in_note(title):
+    # The same meeting if a heading is the title, or the title cut short from its start (a long
+    # calendar title shortened by hand), or the other way round.
+    k = title.lower()
+    return k in present or any(len(h) >= 12 and (k.startswith(h) or h.startswith(k)) for h in present)
+
 added_now, dismissed = [], 0
 for t, title, meta in sorted(wanted.values()):
-    if title.lower() in present:
+    if in_note(title):
         continue
     if title.lower() in added_before - removed_titles:
         dismissed += 1
