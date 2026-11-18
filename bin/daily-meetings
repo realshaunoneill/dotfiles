@@ -229,8 +229,9 @@ for e in events:
         left_out.append(("no one else", title))
         continue
     if headcount > LARGE_MEETING:
-        left_out.append((f"{headcount} people", title))
+        left_out.append((f"{headcount} people, {status or 'no status'}", title))
         continue
+    team.sort()  # attendees arrive in a different order each run; sorted, a refresh changes nothing
     # Calendar attendees come in no fixed order, so three names picked from a big meeting say
     # nothing. A small meeting lists everyone; a bigger one shows team members and a count.
     if others <= SMALL_MEETING:
@@ -341,7 +342,7 @@ for t, title, meta in sorted(wanted.values()):
 
 reasons = {}
 for reason, _ in left_out:
-    bucket = "large" if reason.endswith(" people") else reason
+    bucket = "large" if " people" in reason else reason
     reasons[bucket] = reasons.get(bucket, 0) + 1
 changes = ", ".join(f"{n} {w}" for n, w in ((added, "added"), (updated, "updated"), (removed, "removed"),
                                               (dismissed, "kept out as you removed them")) if n) or "no changes"
