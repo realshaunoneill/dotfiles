@@ -38,11 +38,12 @@
 # members (a note in the vault's People folder) are linked, colleagues sharing your email
 # domain are named from it, and anyone else is only counted, so no outside address is written.
 #
-# Re-running is safe. A meeting already in the note as a `###` heading or an all-bold line is
-# not added again, nor is one an earlier run added that you have since deleted or renamed, and
-# nothing you wrote is touched. An entry the script wrote and you haven't
-# written under yet is updated (time, people) or, once it no longer qualifies (declined,
-# cancelled), removed. Every run is logged, with what was left out and why.
+# Run it again as often as you like: it only appends. A meeting the note doesn't have yet gets an
+# entry; nothing already in the note is changed or removed, its own earlier entries included,
+# and it refuses to write if a merge would. A meeting already there as a `###` heading (or one
+# shortened from the title's start) or an all-bold line isn't added again, nor is one an earlier
+# run added that you have since deleted or renamed. Every run is logged, with what was left out
+# and why.
 set -euo pipefail
 
 VAULT="${DAILY_MEETINGS_VAULT:-$HOME/Personal/Vault}"
@@ -263,10 +264,6 @@ def heading_title(line):
     m = re.match(r"^\*\*(.+?)\*\*\s*$", line)
     return m.group(1).strip().lower() if m else None
 
-def is_meta(line):
-    # The italic line this script writes under a heading: one *, not the ** of a bold title.
-    return bool(re.match(r"^\*[^*].*\*$", line.strip()))
-
 def find_section():
     s = next((i for i, l in enumerate(lines) if l.strip().lower() == "## meetings"), None)
     if s is None:
@@ -274,36 +271,13 @@ def find_section():
     e = next((i for i in range(s + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
     return s, e
 
-added = updated = removed = 0
-removed_titles = set()
-start_i, end_i = find_section()
-if start_i is not None:
-    # Walk the section's blocks: update or drop the ones this script wrote and nobody has
-    # written under; keep everything else exactly as it is.
-    body = lines[start_i + 1:end_i]
-    heads = [i for i, l in enumerate(body) if l.startswith("### ")]
-    pre = body[:heads[0]] if heads else body
-    blocks = [body[h:(heads[k + 1] if k + 1 < len(heads) else len(body))] for k, h in enumerate(heads)]
-    kept = []
-    for b in blocks:
-        key = heading_title(b[0])
-        mine = len(b) > 1 and is_meta(b[1])
-        untouched = mine and all(l.strip() in ("", "-") for l in b[2:])
-        if key in wanted and mine:
-            t, title, meta = wanted[key]
-            new = [f"### {t} {title}", meta] + b[2:]
-            if new != b:
-                updated += 1
-            kept.append(new)
-        elif key not in wanted and untouched:
-            removed += 1
-            removed_titles.add(key)
-        else:
-            kept.append(b)
-    lines[start_i + 1:end_i] = pre + [l for b in kept for l in b]
+# Append-only: a run inserts entries for meetings the note doesn't have yet, and never changes
+# or removes a line that is already there, the ones it wrote included. Checked before writing.
+original = list(lines)
+added = 0
 
 # Meetings an earlier run added today. If one is no longer in the note, you deleted or renamed
-# it, so it stays out. One this run removed itself (declined, cancelled) may come back.
+# it, so it stays out.
 record = pathlib.Path(os.environ["ADDED"])
 added_before = set()
 if record.exists():
@@ -320,7 +294,7 @@ added_now, dismissed = [], 0
 for t, title, meta in sorted(wanted.values()):
     if in_note(title):
         continue
-    if title.lower() in added_before - removed_titles:
+    if title.lower() in added_before:
         dismissed += 1
         continue
     start_i, end_i = find_section()
@@ -354,22 +328,28 @@ reasons = {}
 for reason, _ in left_out:
     bucket = "large" if " people" in reason else reason
     reasons[bucket] = reasons.get(bucket, 0) + 1
-changes = ", ".join(f"{n} {w}" for n, w in ((added, "added"), (updated, "updated"), (removed, "removed"),
-                                              (dismissed, "kept out as you removed them")) if n) or "no changes"
+changes = ", ".join(f"{n} {w}" for n, w in ((added, "added"), (dismissed, "kept out as you removed them")) if n) or "nothing new"
 summary = f"daily-meetings: {today}: {changes}" + (
     " (left out " + ", ".join(f"{n} {k}" for k, n in reasons.items()) + ")" if reasons else "")
 detail = [f"    left out ({reason}): {title}" for reason, title in left_out]
 detail += [f"    kept ({status}): {title}" for status, title in unaccepted]
 
+def keeps_everything(old, new):
+    # Every line already in the note is still there, in the same order: old is a subsequence.
+    rest = iter(new)
+    return all(any(line == n for n in rest) for line in old)
+
+if not keeps_everything(original, lines):
+    sys.exit("daily-meetings: refusing to write, the merge would have changed existing lines")
 out = "\n".join(lines)
 if dry_run:
     print(out)
     print("\n".join([summary] + detail), file=sys.stderr)
     sys.exit(0)
-if added or updated or removed:
+if added:
     note.parent.mkdir(parents=True, exist_ok=True)
     note.write_text(out)
-keep = sorted((added_before - removed_titles) | set(added_now))
+keep = sorted(added_before | set(added_now))
 record.write_text("".join(f"{today}\t{t}\n" for t in keep))
 stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 with open(os.environ["LOG"], "a") as log:
