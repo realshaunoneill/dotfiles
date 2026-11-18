@@ -32,12 +32,14 @@
 #
 # The shortcut only fetches; this script decides. It leaves out all-day events, meetings you
 # declined, meetings of more than LARGE_MEETING people, and events with nobody else in them.
+# A meeting you haven't answered, or said maybe to, is kept and marked "not answered"/"maybe".
 # People are email addresses: rooms and groups, which arrive as bare names, are dropped. Team
 # members (a note in the vault's People folder) are linked, colleagues sharing your email
 # domain are named from it, and anyone else is only counted, so no outside address is written.
 #
 # Re-running is safe. A meeting already in the note as a `###` heading or an all-bold line is
-# not added again, and nothing you wrote is touched. An entry the script wrote and you haven't
+# not added again, nor is one an earlier run added that you have since deleted or renamed, and
+# nothing you wrote is touched. An entry the script wrote and you haven't
 # written under yet is updated (time, people) or, once it no longer qualifies (declined,
 # cancelled), removed. Every run is logged, with what was left out and why.
 set -euo pipefail
@@ -50,6 +52,9 @@ LABEL="local.daily-meetings"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/daily-meetings.log"
 SAVED="$HOME/Library/Caches/daily-meetings/events.txt"
+# What each run added today, so a meeting you deleted or renamed isn't added back. One file,
+# rewritten each run with only today's lines.
+ADDED="$HOME/Library/Caches/daily-meetings/added.txt"
 
 dry_run=0
 from_saved=0
@@ -179,6 +184,7 @@ my_domain = next((a.partition("@")[2].lower() for e in events for a in e["attend
                   if "@" in a and norm(a.partition("@")[0]) == me), None)
 
 left_out = []   # (reason, title), for the summary and the log
+unaccepted = []  # (your response, title): meetings kept without an Accepted, for the log
 wanted = {}     # title.lower() -> (start, title, meta line)
 for e in events:
     title = re.sub(r"\s+", " ", e.get("title", "")).strip()
@@ -189,9 +195,14 @@ for e in events:
     if e.get("allday", "").strip().lower() in ("yes", "true", "1"):
         left_out.append(("all-day", title))
         continue
-    if "declin" in e.get("status", "").lower():
+    # Only a meeting you declined is left out. One you haven't answered, or said maybe to, goes
+    # in marked, so it stands out as still needing a reply.
+    status = e.get("status", "").strip()
+    if "declin" in status.lower():
         left_out.append(("declined", title))
         continue
+    answer = ("maybe" if re.search(r"tentat|maybe", status, re.I)
+              else "not answered" if re.search(r"pend|need|not|invit", status, re.I) else None)
     team, names, outside, headcount = [], [], 0, 0
     for a in e["attendees"]:
         local, _, domain = a.partition("@")
@@ -229,7 +240,10 @@ for e in events:
     if rest:
         who.append(f"+{rest} other{'' if rest == 1 else 's'}" if who else f"{headcount} people")
     span = f"{start}–{end}" if end and end > start else start
-    wanted[title.lower()] = (start, title, f"*{span} · {', '.join(who)}*")
+    flag = f" · {answer}" if answer else ""
+    wanted[title.lower()] = (start, title, f"*{span} · {', '.join(who)}{flag}*")
+    if status.lower() != "accepted":
+        unaccepted.append((status or "no status", title))
 
 if note.exists():
     text = note.read_text()
@@ -257,6 +271,7 @@ def find_section():
     return s, e
 
 added = updated = removed = 0
+removed_titles = set()
 start_i, end_i = find_section()
 if start_i is not None:
     # Walk the section's blocks: update or drop the ones this script wrote and nobody has
@@ -278,13 +293,24 @@ if start_i is not None:
             kept.append(new)
         elif key not in wanted and untouched:
             removed += 1
+            removed_titles.add(key)
         else:
             kept.append(b)
     lines[start_i + 1:end_i] = pre + [l for b in kept for l in b]
 
+# Meetings an earlier run added today. If one is no longer in the note, you deleted or renamed
+# it, so it stays out. One this run removed itself (declined, cancelled) may come back.
+record = pathlib.Path(os.environ["ADDED"])
+added_before = set()
+if record.exists():
+    added_before = {t for d, _, t in (l.partition("\t") for l in record.read_text().splitlines()) if d == today}
 present = {heading_title(l) for l in lines} - {None}
+added_now, dismissed = [], 0
 for t, title, meta in sorted(wanted.values()):
     if title.lower() in present:
+        continue
+    if title.lower() in added_before - removed_titles:
+        dismissed += 1
         continue
     start_i, end_i = find_section()
     if start_i is None:
@@ -310,16 +336,19 @@ for t, title, meta in sorted(wanted.values()):
         block.insert(0, "")
     lines[at:at] = block
     present.add(title.lower())
+    added_now.append(title.lower())
     added += 1
 
 reasons = {}
 for reason, _ in left_out:
     bucket = "large" if reason.endswith(" people") else reason
     reasons[bucket] = reasons.get(bucket, 0) + 1
-changes = ", ".join(f"{n} {w}" for n, w in ((added, "added"), (updated, "updated"), (removed, "removed")) if n) or "no changes"
+changes = ", ".join(f"{n} {w}" for n, w in ((added, "added"), (updated, "updated"), (removed, "removed"),
+                                              (dismissed, "kept out as you removed them")) if n) or "no changes"
 summary = f"daily-meetings: {today}: {changes}" + (
     " (left out " + ", ".join(f"{n} {k}" for k, n in reasons.items()) + ")" if reasons else "")
 detail = [f"    left out ({reason}): {title}" for reason, title in left_out]
+detail += [f"    kept ({status}): {title}" for status, title in unaccepted]
 
 out = "\n".join(lines)
 if dry_run:
@@ -329,6 +358,8 @@ if dry_run:
 if added or updated or removed:
     note.parent.mkdir(parents=True, exist_ok=True)
     note.write_text(out)
+keep = sorted((added_before - removed_titles) | set(added_now))
+record.write_text("".join(f"{today}\t{t}\n" for t in keep))
 stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 with open(os.environ["LOG"], "a") as log:
     log.write("\n".join([f"{stamp} {summary}"] + detail) + "\n")
@@ -336,11 +367,11 @@ print(summary)
 PY
 
 if [ "$dry_run" = 1 ]; then
-  printf '%s\n' "$events" | VAULT="$VAULT" DRY_RUN=1 LOG=/dev/null /usr/bin/python3 -I -c "$py"
+  printf '%s\n' "$events" | VAULT="$VAULT" DRY_RUN=1 LOG=/dev/null ADDED="$ADDED" /usr/bin/python3 -I -c "$py"
   exit
 fi
 # The shortcut shows the summary as its result; the script logs it with the detail.
-if ! summary=$(printf '%s\n' "$events" | VAULT="$VAULT" DRY_RUN=0 LOG="$LOG" /usr/bin/python3 -I -c "$py" 2>&1); then
+if ! summary=$(printf '%s\n' "$events" | VAULT="$VAULT" DRY_RUN=0 LOG="$LOG" ADDED="$ADDED" /usr/bin/python3 -I -c "$py" 2>&1); then
   echo "$(date '+%F %T') $summary" >> "$LOG"
   echo "$summary"
   exit 1
