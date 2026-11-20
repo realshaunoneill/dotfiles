@@ -161,7 +161,7 @@ One profile lives outside the plist: `.config/iterm2/DynamicProfiles/herdr.json`
 `bin/daily-meetings` adds today's calendar meetings to today's Obsidian daily note. Each one becomes a `### HH:MM Title` heading under `## Meetings`, with team members linked to their person notes. The calendar is read by a Shortcuts shortcut, **Todays Meetings** (no apostrophe), because Shortcuts already has calendar access and needs no admin rights.
 
 The shortcut calls the script, not the other way round. Run by `shortcuts run`, its Find Calendar Events comes back empty, while the same shortcut run inside Shortcuts finds the meetings. So `daily-meetings` with no arguments opens the shortcut's `shortcuts://` link. The shortcut's last action, Run Shell Script `~/.zsh/bin/daily-meetings --stdin`, gets the events on stdin and merges them. That needs Shortcuts → Settings → Advanced → **Allow Running Scripts**. The script's header comment gives the format the shortcut must print.
-- `daily-meetings --install` runs it at 11:00 on weekdays from a user LaunchAgent (`local.daily-meetings`). Install it from `~/.zsh/bin`, the copy that updates itself. Each merge is logged to `~/Library/Logs/daily-meetings.log`.
+- `daily-meetings --install` runs it at 10:04 on weekdays (`RUN_HOUR`/`RUN_MINUTE` in the script) from a user LaunchAgent (`local.daily-meetings`). Install it from `~/.zsh/bin`, the copy that updates itself. Each merge is logged to `~/Library/Logs/daily-meetings.log`.
 - A Raycast script command, **Refresh Meetings**, runs it on demand.
 - `daily-meetings --stdin --dry-run` reads sample events from stdin and prints the merged note without writing it.
 
